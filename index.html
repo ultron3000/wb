@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Batman Trilogy</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: url('https://www.burda-strihy.cz/32874-large_default/nazehlovaci-obrazek-batman-logo-licence-dc-8-x-4-cm-monoquick.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+    .overlay {
+      background-color: rgba(0, 0, 0, 0.7);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 15px;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px #000;
+    }
+    .movie-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 100%;
+      max-width: 600px;
+    }
+    .movie-card {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid #00aaff;
+      border-radius: 15px;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      transition: transform 0.3s, background 0.3s;
+    }
+    .movie-card:hover {
+      transform: scale(1.03);
+      background: rgba(0, 170, 255, 0.2);
+    }
+    .movie-card a {
+      text-decoration: none;
+      color: #ffffff;
+      font-size: 1.2rem;
+    }
+
+    @media(min-width: 768px) {
+      .movie-container {
+        flex-direction: row;
+        justify-content: center;
+        max-width: 900px;
+      }
+      .movie-card {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <h1>Batman Trilogy</h1>
+    <div class="movie-container">
+      <div class="movie-card"><a href="batmanbegins.html">Batman Begins (2005)</a></div>
+      <div class="movie-card"><a href="thedarkknight.html">The Dark Knight (2008)</a></div>
+      <div class="movie-card"><a href="thedarkknightrises.html">The Dark Knight Rises (2012)</a></div>
+    </div>
+  </div>
+</body>
+</html>
