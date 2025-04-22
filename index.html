@@ -8,10 +8,11 @@
     body {
       font-family: Arial, sans-serif;
       margin: 0;
-      background: url('https://www.burda-strihy.cz/32874-large_default/nazehlovaci-obrazek-batman-logo-licence-dc-8-x-4-cm-monoquick.jpg') no-repeat center center fixed;
-      background-size: cover;
+      padding: 0;
       color: white;
       text-align: center;
+      background: url('https://www.burda-strihy.cz/32874-large_default/nazehlovaci-obrazek-batman-logo-licence-dc-8-x-4-cm-monoquick.jpg') no-repeat center center fixed;
+      background-size: 40%; /* Adjusted to make the logo fit better */
     }
     .overlay {
       background-color: rgba(0, 0, 0, 0.7);
@@ -19,13 +20,15 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start; /* Positioning text towards top */
       padding: 30px 15px;
     }
     h1 {
       font-size: 3rem;
-      margin-bottom: 30px;
+      margin-bottom: 40px;
       text-shadow: 2px 2px #000;
+      text-transform: uppercase;
+      padding-top: 20%; /* Adjusted padding to make room for the logo */
     }
     .movie-container {
       display: flex;
