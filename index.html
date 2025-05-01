@@ -47,10 +47,16 @@
       transform: scale(1.03);
       background: rgba(0, 170, 255, 0.2);
     }
+    .movie-card img {
+      max-width: 100%;
+      border-radius: 10px;
+      margin-bottom: 10px;
+    }
     .movie-card a {
       text-decoration: none;
       color: #ffffff;
       font-size: 1.2rem;
+      display: block;
     }
 
     @media(min-width: 768px) {
@@ -69,9 +75,18 @@
   <div class="overlay">
     <h1>Batman Trilogy</h1>
     <div class="movie-container">
-      <div class="movie-card"><a href="batmanbegins.html">Batman Begins (2005)</a></div>
-      <div class="movie-card"><a href="thedarkknight.html">The Dark Knight (2008)</a></div>
-      <div class="movie-card"><a href="thedarkknightrises.html">The Dark Knight Rises (2012)</a></div>
+      <div class="movie-card">
+        <img src="https://lh4.googleusercontent.com/proxy/-Bi_o8WEa85ai3Jmb9Ax2sx0ht-FSQAUFvFpbVmMykXrD44H7yRRbhn8jlzE7LZ3OqDMiODtQl8i-NGJmqnAboljoqeU5m0TpW5fTehK_g" alt="Batman Begins Poster">
+        <a href="batmanbegins.html">Batman Begins (2005)</a>
+      </div>
+      <div class="movie-card">
+        <img src="https://vickster51corner.files.wordpress.com/2018/08/diy-frame-the-dark-knight-movie-film-poster-batman-and-joker-fabric-silk-poster-print-posters_640x640.jpg?w=640&h=427&crop=1" alt="The Dark Knight Poster">
+        <a href="thedarkknight.html">The Dark Knight (2008)</a>
+      </div>
+      <div class="movie-card">
+        <img src="https://www.hdwallpapers.in/download/the_dark_knight_rises_5k-768x1280.jpg" alt="The Dark Knight Rises Poster">
+        <a href="thedarkknightrises.html">The Dark Knight Rises (2012)</a>
+      </div>
     </div>
   </div>
 </body>
