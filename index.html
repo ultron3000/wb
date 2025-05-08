@@ -1,93 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Batman Trilogy</title>
+  <meta charset="UTF-8">
+  <title>Warner Bros. Cinematic Universe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
     body {
+      background: black;
+      color: #ffcc00;
       font-family: Arial, sans-serif;
       margin: 0;
-      background: url('https://www.burda-strihy.cz/32874-large_default/nazehlovaci-obrazek-batman-logo-licence-dc-8-x-4-cm-monoquick.jpg') no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
-    }
-    .overlay {
-      background-color: rgba(0, 0, 0, 0.7);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 30px 15px;
-    }
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 30px;
-      text-shadow: 2px 2px #000;
-    }
-    .movie-container {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      width: 100%;
-      max-width: 600px;
-    }
-    .movie-card {
-      background: rgba(255, 255, 255, 0.1);
-      border: 2px solid #00aaff;
-      border-radius: 15px;
       padding: 20px;
       text-align: center;
-      backdrop-filter: blur(6px);
-      transition: transform 0.3s, background 0.3s;
     }
-    .movie-card:hover {
-      transform: scale(1.03);
-      background: rgba(0, 170, 255, 0.2);
+    h1 {
+      margin-bottom: 20px;
+      font-size: 2em;
     }
-    .movie-card img {
-      max-width: 100%;
+    .movies {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+    }
+    .movie {
+      background: #222;
+      border: 2px solid #ffcc00;
+      border-radius: 12px;
+      width: 200px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+    .movie:hover {
+      transform: scale(1.05);
+      background: #333;
+    }
+    .movie img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
       border-radius: 10px;
-      margin-bottom: 10px;
     }
-    .movie-card a {
-      text-decoration: none;
-      color: #ffffff;
-      font-size: 1.2rem;
-      display: block;
+    .movie-title {
+      margin-top: 10px;
+      font-size: 1em;
+      font-weight: bold;
+    }
+  
+    @media (max-width: 600px) {
+      .movies {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+      .movie {
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .movie img {
+        height: auto;
+      }
     }
 
-    @media(min-width: 768px) {
-      .movie-container {
-        flex-direction: row;
-        justify-content: center;
-        max-width: 900px;
-      }
-      .movie-card {
-        flex: 1;
-      }
-    }
   </style>
 </head>
 <body>
-  <div class="overlay">
-    <h1>Batman Trilogy</h1>
-    <div class="movie-container">
-      <div class="movie-card">
-        <img src="https://lh4.googleusercontent.com/proxy/-Bi_o8WEa85ai3Jmb9Ax2sx0ht-FSQAUFvFpbVmMykXrD44H7yRRbhn8jlzE7LZ3OqDMiODtQl8i-NGJmqnAboljoqeU5m0TpW5fTehK_g" alt="Batman Begins Poster">
-        <a href="batmanbegins.html">Batman Begins (2005)</a>
-      </div>
-      <div class="movie-card">
-        <img src="https://vickster51corner.files.wordpress.com/2018/08/diy-frame-the-dark-knight-movie-film-poster-batman-and-joker-fabric-silk-poster-print-posters_640x640.jpg?w=640&h=427&crop=1" alt="The Dark Knight Poster">
-        <a href="thedarkknight.html">The Dark Knight (2008)</a>
-      </div>
-      <div class="movie-card">
-        <img src="https://collectong.com/cdn/shop/files/DKR_DLSA_front.jpg?v=1726587846" alt="The Dark Knight Rises Poster">
-        <a href="thedarkknightrises.html">The Dark Knight Rises (2012)</a>
-      </div>
-    </div>
-  </div>
+
+<h1>🚨 007 Cinematic Universe</h1>
+
+<div class="movies" id="movies"></div>
+
+<script>
+const movies = [
+  { title: "Batman-1989", video: "https://sipt.cneeleyalin.sbs/v4/61/md9a5/cf-master.txt?v=1732868923", image: "https://i.pinimg.com/736x/ab/8d/eb/ab8deb68ba4b53124a5a7f4ab9545aae.jpg" },
+  { title: "Batman Forever-1995", video: "https://slob.hurlbertb.sbs/v4/qu/bknrl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTUyNjJhZWItMTZkNS00NDc4LTllNjUtYTg3NjczMzA5ZTViXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+  { title: "Batman & Robin-1997", video: "https://sxic.hershpdelah.sbs:443/v4/ic/uv5sm/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYzU3ZjE3M2UtM2E4Ni00MDI5LTkyZGUtOTFkMGIyYjNjZGU3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+  { title: "Batman Returns-1992", video: "https://sdqm.dkneropbr.sbs:443/v4/lf/563na/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/Dm4AAOSwcpViS587/s-l1200.jpg" },
+  { title: "Batman Begins-2005", video: "https://sxic.biggsupndfun.sbs/v4/db/ce9qg/cf-master.txt?v=1735243789, image: "https://m.media-amazon.com/images/M/MV5BODIyMDdhNTgtNDlmOC00MjUxLWE2NDItODA5MTdkNzY3ZTdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+  { title: "The Dark Knight-2008", video: "https://sdqm.hershpdelah.sbs/v4/ck/h5fua/cf-master.txt?v=1735247286", image: "https://i.pinimg.com/736x/02/1d/cb/021dcb81cf28bb9ec096eb618b20cc1a.jpg" },
+  { title: "The Dark Knight Rises-2012", video: "https://sipt.ulrikeumdqputm.sbs:443/v4/qu/mriob/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BZDdkYjIyNTEtYjlkZC00NDdlLTgxYmUtMzI3NjM5YzQ0NjY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg" },
+  { title: "The Batman-2022", video: "https://cdn-1.celestialodyssey.site/video-stream/4372f73a/playlist.m3u8", image: "https://alternativemovieposters.com/wp-content/uploads/2022/12/Robert-Watts_LiveLetDie.jpg" },
+  { title: "Superman-1978", video: "https://cdn-1.celestialodyssey.site/video-stream/d44801f0/playlist.m3u8", image: "https://image.tmdb.org/t/p/original/itH4xI6TbJtJSqcZ43B3MkpL1gy.jpg" },
+  { title: "Superman II-1980", video: "https://cdn-1.celestialodyssey.site/video-stream/cee76b74/playlist.m3u8", image: "https://posterspy.com/wp-content/uploads/2022/11/tswlm-poster.jpg" },
+  { title: "Superman III-1983", video: "https://cdn-1.celestialodyssey.site/video-stream/61ec181f/playlist.m3u8", image: "https://image.tmdb.org/t/p/original/uYLS9uMZmP6iXAh0jhWUZI2Nk3e.jpg" },
+  { title: "Superman IV: The Quest for Peace-1987", video: "https://cdn-1.celestialodyssey.site/video-stream/ebd9fd6c/playlist.m3u8", image: "https://i.pinimg.com/736x/9e/16/41/9e1641d6057cfae2e77879866f54a8a3.jpg" },
+  { title: "Superman Returns-2006", video: "https://cdn-1.celestialodyssey.site/video-stream/4dbe366b/playlist.m3u8", image: "https://cdn.posteritati.com/posters/000/000/061/237/octopussy-md-web.jpg" },  
+  { title: "Man of Steel-2013", video: "https://cdn-1.celestialodyssey.site/video-stream/3b6df79c/playlist.m3u8", image: "https://i.pinimg.com/736x/cb/36/82/cb3682872fc7b9042b505e884f5e5d54.jpg" },
+  { title: "Batman v Superman: Dawn of Justice-2016", video: "https://cdn-1.celestialodyssey.site/video-stream/2748ce73/playlist.m3u8", image: "https://posterspy.com/wp-content/uploads/2023/06/TLD_WEB_TEMPLATE_1000x1500px.jpg" },
+  { title: "Justice League-2017", video: "https://cdn-1.celestialodyssey.site/video-stream/25b11d96/playlist.m3u8", image: "https://i.pinimg.com/736x/d8/45/27/d84527d6f1c4cba168b690a59454bf36.jpg" },
+  { title: "Zack Snyder's Justice League-2021", video: "https://s3ae.killionorellanacoelho.sbs/v4/61/56psf/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/96/0e/f3/960ef3339761fc03969d9e37ec60d2d5.jpg" },
+  { title: "Wonder Woman-1974", video: "https://cdn-1.celestialodyssey.site/video-stream/8e0794fc/playlist.m3u8", image: "https://cdn11.bigcommerce.com/s-yzgoj/images/stencil/1280x1280/products/3234392/6220705/GBEFPO431__06020.1709712291.jpg?c=2" },
+  { title: "Wonder Woman-2017", video: "https://cdn-1.celestialodyssey.site/video-stream/60b66510/playlist.m3u8", image: "https://i.pinimg.com/474x/a5/fc/8f/a5fc8fa3feb3ea9f3f6316cb8c01e9b6.jpg" },
+  { title: "Wonder Woman 1984-2020", video: "https://cdn-1.celestialodyssey.site/video-stream/431bb15c/playlist.m3u8", image: "https://cdn11.bigcommerce.com/s-yzgoj/images/stencil/500x659/products/2911891/5955577/MOVAJ0534__87882.1679599595.jpg?c=2" },
+  { title: "Aquaman-2018", video: "https://cdn-1.celestialodyssey.site/video-stream/32000510/playlist.m3u8", image: "https://i.redd.it/6tkj6vkehct81.jpg" },
+  { title: "Aquaman and the Lost Kingdom-2023", video: "https://s3ae.alenapark.sbs:443/v4/ox/xqia6/index-f2-v1-a1.txt", image: "https://artofthemovies.co.uk/cdn/shop/files/IMG_4340_300x300.jpg?v=1697040084" },
+  { title: "The Flash-2023", video: "https://cdn-1.celestialodyssey.site/video-stream/e606a393/playlist.m3u8", image: "https://i.pinimg.com/736x/d2/b2/ff/d2b2ffa2fb20976ae211f1d473128d2c.jpg" },
+  { title: "No Time to Die", video: "https://cdn-1.celestialodyssey.site/video-stream/0be4437c/playlist.m3u8", image: "https://preview.redd.it/4a8rd5658g161.jpg?width=640&crop=smart&auto=webp&s=8c16f3cd4b0a985f791de5507f7d2b1c411eda02" },
+];
+
+const container = document.getElementById('movies');
+movies.forEach((movie, index) => {
+  const div = document.createElement('div');
+  div.className = 'movie';
+  div.innerHTML = `
+    <img src="${movie.image}" alt="${movie.title}">
+    <div class="movie-title">${movie.title}</div>
+  `;
+  div.onclick = () => {
+    const url = `player.html?title=${encodeURIComponent(movie.title)}&video=${encodeURIComponent(movie.video)}&index=${index}`;
+    window.location.href = url;
+  };
+  container.appendChild(div);
+});
+</script>
+
 </body>
 </html>
