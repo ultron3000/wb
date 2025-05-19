@@ -85,7 +85,7 @@
 <button class="caption-button" id="toggle-captions">Toggle Subtitles</button>
 <br><br>
 
-<a href="index.html">← Back to Movies</a>
+<a href="index.html">← Back </a>
 
 <script>
 const params = new URLSearchParams(window.location.search);
@@ -114,22 +114,8 @@ function hideSpinner() {
   loadingText.style.display = "none";
 }
 
-function playVideo(url) {
-  if (Hls.isSupported()) {
-function playVideo(url) {
-  if (Hls.isSupported()) {
-    const hls = new Hls({
-      xhrSetup: function (xhr, url) {
-        if (url.includes("uqloads.xyz")) {
-          xhr.withCredentials = true;
-          xhr.setRequestHeader("Referer", "https://uqloads.xyz/");
-          xhr.setRequestHeader("Origin", "https://uqloads.xyz");
-        }
-      }
-    });
-    hls.loadSource(url);
-    hls.attachMedia(video);
-    ...
+const hls = new Hls();
+
     hls.loadSource(url);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
