@@ -116,7 +116,20 @@ function hideSpinner() {
 
 function playVideo(url) {
   if (Hls.isSupported()) {
-    const hls = new Hls();
+function playVideo(url) {
+  if (Hls.isSupported()) {
+    const hls = new Hls({
+      xhrSetup: function (xhr, url) {
+        if (url.includes("uqloads.xyz")) {
+          xhr.withCredentials = true;
+          xhr.setRequestHeader("Referer", "https://uqloads.xyz/");
+          xhr.setRequestHeader("Origin", "https://uqloads.xyz");
+        }
+      }
+    });
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    ...
     hls.loadSource(url);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
