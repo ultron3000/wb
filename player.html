@@ -85,7 +85,7 @@
 <button class="caption-button" id="toggle-captions">Toggle Subtitles</button>
 <br><br>
 
-<a href="index.html">← Back </a>
+<a href="index.html">← Back to Movies</a>
 
 <script>
 const params = new URLSearchParams(window.location.search);
@@ -114,8 +114,9 @@ function hideSpinner() {
   loadingText.style.display = "none";
 }
 
-const hls = new Hls();
-
+function playVideo(url) {
+  if (Hls.isSupported()) {
+    const hls = new Hls();
     hls.loadSource(url);
     hls.attachMedia(video);
     hls.on(Hls.Events.MANIFEST_PARSED, () => {
