@@ -69,6 +69,20 @@
 
 <h1>🚨 Warner Bros. Pictures</h1>
 
+
+<input type="text" id="searchBar" placeholder="Search Warner Bros. movies..." style="
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 10px 15px;
+  font-size: 1em;
+  border-radius: 8px;
+  border: 2px solid #ffcc00;
+  background: #111;
+  color: #ffcc00;
+  box-shadow: 0 0 10px #ffcc00a0;
+">
+
 <div class="movies" id="movies"></div>
 
 <script>
@@ -181,6 +195,17 @@ movies.forEach((movie, index) => {
   };
   container.appendChild(div);
 });
+
+// Live Search Filter
+document.getElementById('searchBar').addEventListener('input', function () {
+  const searchTerm = this.value.toLowerCase();
+  const movieDivs = document.querySelectorAll('.movie');
+  movieDivs.forEach(div => {
+    const title = div.querySelector('.movie-title').textContent.toLowerCase();
+    div.style.display = title.includes(searchTerm) ? 'block' : 'none';
+  });
+});
+
 </script>
 
 </body>
