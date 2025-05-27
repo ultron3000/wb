@@ -425,37 +425,37 @@
         init();
     
 
-    function isStream(url) {
-      return /\.(m3u8|txt)$/i.test(url);
-    }
+function isStream(url) {
+  return /\.(m3u8|txt)$/i.test(url);
+}
 
-    function openModal(movie) {
-      document.getElementById('modal-title').textContent = movie.title;
-      document.getElementById('modal-year').textContent = movie.year || "";
-      document.getElementById('modal-rating').textContent = movie.rating || "Not rated";
-      const video = document.getElementById('modal-video');
-      video.src = movie.video;
-      document.getElementById('playback-modal').classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      video.play();
-    }
+function openModal(movie) {
+  document.getElementById('modal-title').textContent = movie.title;
+  document.getElementById('modal-year').textContent = movie.year || "";
+  document.getElementById('modal-rating').textContent = movie.rating || "Not rated";
+  const video = document.getElementById('modal-video');
+  video.src = movie.video;
+  document.getElementById('playback-modal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  video.play();
+}
 
-    function closeModalHandler() {
-      const modal = document.getElementById('playback-modal');
-      const video = document.getElementById('modal-video');
-      modal.classList.add('hidden');
-      video.pause();
-      video.src = "";
-      document.body.style.overflow = '';
-    }
+function closeModalHandler() {
+  const modal = document.getElementById('playback-modal');
+  const video = document.getElementById('modal-video');
+  modal.classList.add('hidden');
+  video.pause();
+  video.src = "";
+  document.body.style.overflow = '';
+}
 
-    document.addEventListener('DOMContentLoaded', () => {
-      const closeModal = document.getElementById('close-modal');
-      if (closeModal) {
-        closeModal.addEventListener('click', closeModalHandler);
-      }
-    });
-    </script>
+document.addEventListener('DOMContentLoaded', () => {
+  const closeModal = document.getElementById('close-modal');
+  if (closeModal) {
+    closeModal.addEventListener('click', closeModalHandler);
+  }
+});
+</script>
 
 <!-- Modal Player -->
 <div class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-90" id="playback-modal">
