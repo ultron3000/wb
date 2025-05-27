@@ -4,9 +4,7 @@
     <meta charset="utf-8"/>
     <title>Warner Bros. Pictures</title>
     <meta content="width=device-width, initial-scale=1" name="viewport"/>
-    <script src="https://cdn.tailwindcss.com">
-
-</script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* Custom scrollbar */
@@ -81,6 +79,56 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            width: 90%;
+            max-width: 1000px;
+            position: relative;
+        }
+        
+        .modal-video {
+            width: 100%;
+            height: 0;
+            padding-bottom: 56.25%; /* 16:9 aspect ratio */
+            position: relative;
+        }
+        
+        .modal-video video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .modal-info {
+            background-color: #111;
+            padding: 20px;
+            color: white;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -160,6 +208,22 @@
         <div id="movies" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
     </main>
 
+    <!-- Video Modal -->
+    <div id="video-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <div class="modal-video">
+                <video id="modal-player" controls>
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="modal-info">
+                <h2 id="modal-title" class="text-2xl font-bold text-yellow-400 mb-2"></h2>
+                <p id="modal-year" class="text-gray-300"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="bg-gray-900 border-t border-yellow-500 py-6">
         <div class="container mx-auto px-4 text-center text-gray-400">
@@ -207,7 +271,7 @@
             { title: "Joker", video: "https://sojg.baugherhatchp.sbs/v4/np/n1lfh/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/7171-V0MHlL._AC_UF1000,1000_QL80_.jpg", category: "batman", year: 2019 },
             { title: "Joker: Folie à Deux", video: "https://s9dz.squiressill.sbs/v4/6s/hdl6o/index-f1-v1-a1.txt", image: "https://alternativemovieposters.com/wp-content/uploads/2024/05/Will-Copeland_Joker2.jpg", category: "batman", year: 2024 },
             { title: "Ocean's Eleven", video: "https://sxic.mooringcarmel.sbs:443/v4/il/81j9q/index-f1-v1-a1.txt", image: "https://www.movieposters.com/cdn/shop/products/edbd4441ef9ce8292d036019d7e580d2_7deab0ec-1bc8-415d-a808-a41b579725b9_grande.jpg?v=1573594964", category: "other", year: 2001 },
-            { title: "Ocean's Twelve", video: "https://sskt.floraaabaa.sbs:443/v4/us/et9s5/index-f2-v1-a1.txt", image: "https://images.moviesanywhere.com/3a029a7436d6ce89101ca844dc45f625/c5434b87-7b94-4981-bae1-4b850502a5ad.jpg", category: "other", year: 2004 },
+            { title: "Ocean's Twelve", video: "https://sskt.floraaabaa.sbs:443/v4/us/et9s5/index-f2-v1-a1.txt", image: "https://images.moviesanywhere.com/3a029a7436d6ce89101ca844dc45f625/c5434b87-7b94-4981-bae1-4b850502a5ad.jpg", category: "other", year: 2024 },
             { title: "Ocean's Thirteen", video: "https://sxic.hershpdelah.sbs/v4/qu/paewu/cf-master.txt?v=1735319012", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p165096_p_v13_ac.jpg", category: "other", year: 2007 },
             { title: "Ocean's 8", video: "https://skra.fulghumlsdsh.sbs/v4/js/36op9/cf-master.txt?v=1733624083", image: "https://musicart.xboxlive.com/7/e6be5000-0000-0000-0000-000000000002/504/image.jpg", category: "other", year: 2018 },
             { title: "Blue Beetle", video: "https://sj3l.wrendresslerle.sbs:443/v4/k5/xspo1/index-f2-v1-a1.txt", image: "https://theposterdepot.com/cdn/shop/files/bluebeetle0820202301_580x.jpg?v=1700782793", category: "justice", year: 2023 },
@@ -236,7 +300,7 @@
             { title: "King Arthur: Legend of the Sword", video: "https://m68btj72qc.cdn-centaurus.com/hls2/01/01203/f81b1hvnezfl_o/master.m3u8?t=eSZoZz0V5sNgBDd7YXBom26ewzp5RBZj7eAW4gRxXmM&s=1747719636&e=129600&f=6016652&srv=6Y0nzgZi8BCfuhZ&i=0.4&sp=500&p1=6Y0nzgZi8BCfuhZ&p2=6Y0nzgZi8BCfuhZ&asn=24554", image: "https://mir-s3-cdn-cf.behance.net/project_modules/disp/034c0682752173.5d2859e5abd97.jpg", category: "other", year: 2017 },
             { title: "The Matrix", video: "https://gs2xxawljjoi.cdn-centaurus.com/hls2/01/00351/yyx4to862vvv_h/master.m3u8?t=E99lvTmisG2ljIXiBOiJ93v8n_vha-Wv4yySTPUba_k&s=1747763094&e=129600&f=1758831&srv=3FjgDmcnea8S35m&i=0.4&sp=500&p1=3FjgDmcnea8S35m&p2=3FjgDmcnea8S35m&asn=24554", image: "https://www.limitedruns.com/media/cache/ee/c4/eec41829a5cc47c6462464e89d173883.jpg", category: "matrix", year: 1999 },
             { title: "The Matrix Reloaded", video: "https://spuc.mcgaugheyjyiy.sbs:443/v4/vz/gkdpe/index-f2-v1-a1.txt", image: "https://media-cache.cinematerial.com/p/500x/tmeigl34/the-matrix-reloaded-movie-poster.jpg?v=1456291958", category: "matrix", year: 2003 },
-            { title: "The Matrix Revolutions", video: "https://sxic.bradburyg.sbs:443/v4/pq/m9r5u/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/tyXwreXv4pfo4T4aplTKIp7f9GI.jpg", category: "matrix", year: 2003 },
+            { title: "The Matrix Revolutions", video: "https://sxic.bradburyg.sbs:443/v4/pq/m9r5u/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/tyXwreXv4pfo4T4aplTKIp7f9GI.jpg", category: "matrix", year: 2023 },
             { title: "The Matrix Resurrections", video: "https://sxic.angelobo.sbs/v4/m9/jano9/index-f1-v1-a1.txt", image: "https://resizing.flixster.com/azk7WCNkOsS1Yb2QOZ6nYBMaVZs=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2Q4ZWE4ZTUwLTI5MTMtNDQ5Yi05M2Y5LTVlNWVlNjU5YWRmZC5qcGc=", category: "matrix", year: 2021 },
             { title: "Dunkirk", video: "https://sipt.yevettesh.sbs/v4/9a/dbsbh/index-f1-v1-a1.txt", image: "https://i.ebayimg.com/images/g/E58AAOSwTglYm52D/s-l1200.jpg", category: "other", year: 2017 },
             { title: "Blade Runner 2049", video: "https://kFo8mkCe0fzdHLq.cdn-centaurus.com/hls2/01/01191/mvj7jdzhcbx8_o/master.m3u8?t=M2HAH_C4WhBzWA0Nhl39mNk11mosGyPaorolurwa4w4&s=1747719219&e=129600&f=5957941&srv=js4BwLKgfmTMJmVh&i=0.4&sp=500&p1=js4BwLKgfmTMJmVh&p2=js4BwLKgfmTMJmVh&asn=24554", image: "https://www.filmpostergallery.co.nz/wp-content/uploads/2022/10/Blade-Runner-2049-One-Sheet-Movie-Poster-12.jpg", category: "other", year: 2017 },
@@ -244,7 +308,7 @@
             { title: "The Conjuring 2", video: "https://cloudflash91.xyz/file1/puzRZpciuf6Z5ruCfS~U0itK+QLrDuHpaPK4UmlnkckdFTxcqGX3GylLssrh9loUNOgdkmE2GsSKjegTijXci~VDZqEaGvs6nLg5rOQUTB1rBrjSjetlqkYJjq+OY~+hWTunUBo59LwewRHr5p+v3qusJIaI3S2WR1tvuKFn8Ik=/NzIw/aW5kZXgubTN1OA==.m3u8", image: "https://m.media-amazon.com/images/I/81ZpWSeRbVL._AC_UF1000,1000_QL80_DpWeblab_.jpg", category: "conjuring", year: 2016 },
             { title: "The Conjuring: The Devil Made Me Do It", video: "https://s3ae.gatesnationjyd.sbs/v4/rw/pjwuk/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjVjMzgyMzUtZDMxOS00MmNkLWE3YjktMmU3NThmOGRkMDcyXkEyXkFqcGc@._V1_.jpg", category: "conjuring", year: 2021 },
             { title: "Annabelle: Creation", video: "https://sskt.biggsupndfun.sbs:443/v4/61/qm99a/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/91fWyeqhysL._AC_UF894,1000_QL80_.jpg", category: "conjuring", year: 2017 },
-            { title: "A Minecraft Movie", video: "https://macdn.hakunaymatata.com/resource/d3f493124fb8e41dd83933475997072c.mp4?Expires=1749564170&Signature=RyUdI3khfoa1DqbDV-gQc8N7YFt2b-uYO7H9vzUwSNGAwDHTcFEME16hoCfj~6jHPG6AVb05qkwNRgWo90ova9lOkNj2FF18Rdl4aYG5QWY~HAHFyBvzzp-vCU-ZHHjOC~Vylu-DalRKLgUoV3TLPN7wdzUbHtMBzU4EdsKMJTPwCdvVJ5ZXv-N1NEW4RbBSgTR72R7Fisx1tjM10A55T54c-eI4YrwVUNtout77MEKzbvn5pIvqfV5AZo~BGlAzHAmGBRoqiPbDA2eFM3ippazOB8-Lc7Ou-Rjc0QJ66m9FBL6bASs9-315iJajYvoeUWclTe6hdtk1I2QRFIiw8A__&Key-Pair-Id=KMHN1LQ1HEUPL", image: "https://lh5.googleusercontent.com/proxy/0nlhqTKgDGo1cPzHFBZR8INQrF5Cpk0GnKUqxkjCKZwzI7JFgt5PnBW_6P8sKXh1LdfFJUs7gzODOQh7fD5KC0q6IRHLAzt0_7rY95d7gWdob5tCQzE", category: "other", year: 2025 },
+            { title: "A Minecraft Movie", video: "https://macdn.hakunaymatata.com/resource/d3f493124fb8e41dd83933475997072c.mp4", image: "https://lh5.googleusercontent.com/proxy/0nlhqTKgDGo1cPzHFBZR8INQrF5Cpk0GnKUqxkjCKZwzI7JFgt5PnBW_6P8sKXh1LdfFJUs7gzODOQh7fD5KC0q6IRHLAzt0_7rY95d7gWdob5tCQzE", category: "other", year: 2025 },
             { title: "Sully", video: "https://skra.alenapark.sbs:443/v4/ty/naotv/index-f2-v1-a1.txt", image: "https://f.woowoowoowoo.net/resize/250x400/e4/46/e4461928c94ab4041938ee5b809c2a57/e4461928c94ab4041938ee5b809c2a57.jpg", category: "other", year: 2016 },
             { title: "Max", video: "https://sipt.gomesscheerer.sbs:443/v4/9a/pccvx/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjA2Nzk0NzIyN15BMl5BanBnXkFtZTgwMjEyNTE5NDE@._V1_.jpg", category: "other", year: 2015 },
             { title: "The Man from U.N.C.L.E.", video: "https://sdqm.shahcanna.sbs:443/v4/sc/jf5yv/index-f2-v1-a1.txt", image: "https://preview.redd.it/24e4icm3yyg51.jpg?width=640&crop=smart&auto=webp&s=8f82bdf02ca69029f0536efe2a674a4103923f1a", category: "other", year: 2015 },
@@ -259,7 +323,7 @@
             { title: "Pacific Rim", video: "https://scvo.mcgaugheyjyiy.sbs:443/v4/ic/6ntwt/index-f2-v1-a1.txt", image: "https://cdn.moviescore.com/posters/52973.jpg", category: "other", year: 2013 },
             { title: "Pacific Rim: Uprising", video: "https://sskt.ulrikeumdqputm.sbs:443/v4/lf/3gc5j/index-f2-v1-a1.txt", image: "https://i.pinimg.com/474x/8a/a8/3c/8aa83c2f2a166fa0a8bda7b9c765c444.jpg", category: "other", year: 2018 },
             { title: "Clash of the Titans", video: "https://sr81.seawrightqrg.sbs:443/v4/61/nynun/index-f2-v1-a1.txt", image: "https://static.tvtropes.org/pmwiki/pub/images/a69eaeff_c05d_4f4c_b760_36afd0bb5b52.jpeg", category: "other", year: 2010 },
-            { title: "Wrath of the Titans", video: "https://sdqm.cedekkerohartf.sbs:443/v4/xq/grvlx/index-f2-v1-a1.txt", image: "https://cdn11.bigcommerce.com/s-ydriczk/images/stencil/1500x1500/products/86389/85947/wrath_of_the_titans_final_original_movie_poster_buy_now_at_starstills__05231__67681.1394515225.jpg?c=2", category: "other", year: 2012 },
+            { title: "Wrath of the Titans", video: "https://sdqm.cedekkerohartf.sbs:443/v4/xq/grvlx/index-f2-v1-a1.txt", image: "https://cdn11.bigcommerce.com/s-ydriczk/images/stencil/1500x1500/products/86389/85947/wrath_of_the_titans_final_original_movie_poster_buy_now_at_starstills__05231__67681.1394515225.jpg?c=2", category: "other", year: 2022 },
             { title: "Get Smart", video: "https://sojg.hurlbertb.sbs:443/v4/hz/pwwo3/index-f1-v1-a1.txt", image: "https://images.moviesanywhere.com/5a669294823e3fed6fc6bad5fec03966/41f09f9d-2ec9-4d79-9c4a-bd169d1ead3f.jpg", category: "other", year: 2008 },
             { title: "Cradle 2 the Grave", video: "https://sojg.hungerfordeckertev.sbs:443/v4/6s/xloef/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p31463_p_v8_ad.jpg", category: "other", year: 2003 },
             { title: "The Hangover", video: "https://sdqm.myersbjhardi.sbs/v4/ck/ofyjm/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p192248_p_v12_ae.jpg", category: "other", year: 2009 },
@@ -277,6 +341,11 @@
         const searchBar = document.getElementById('searchBar');
         const themeToggle = document.getElementById('theme-toggle');
         const sortToggle = document.getElementById('sort-toggle');
+        const videoModal = document.getElementById('video-modal');
+        const modalPlayer = document.getElementById('modal-player');
+        const modalTitle = document.getElementById('modal-title');
+        const modalYear = document.getElementById('modal-year');
+        const closeModal = document.getElementById('close-modal');
         
         // State
         let currentCategory = 'all';
@@ -310,6 +379,20 @@
             
             // Sort toggle
             sortToggle.addEventListener('click', toggleSort);
+            
+            // Close modal
+            closeModal.addEventListener('click', () => {
+                videoModal.style.display = 'none';
+                modalPlayer.pause();
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (event) => {
+                if (event.target === videoModal) {
+                    videoModal.style.display = 'none';
+                    modalPlayer.pause();
+                }
+            });
         }
         
         // Update active category button
@@ -349,6 +432,23 @@
             }
             
             renderMovies();
+        }
+        
+        // Play video based on format
+        function playVideo(title, videoUrl, year) {
+            // Check if the video is an MP4 file
+            if (videoUrl.toLowerCase().endsWith('.mp4')) {
+                // Play in modal
+                modalTitle.textContent = title;
+                modalYear.textContent = year;
+                modalPlayer.src = videoUrl;
+                videoModal.style.display = 'flex';
+                modalPlayer.play();
+            } else {
+                // Redirect to player.html for other formats
+                const url = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(videoUrl)}`;
+                window.location.href = url;
+            }
         }
         
         // Filter and sort movies
@@ -398,7 +498,7 @@
                         </div>
                     `;
                 } else {
-                    filteredMovies.forEach((movie, index) => {
+                    filteredMovies.forEach((movie) => {
                         const div = document.createElement('div');
                         div.className = 'fade-in';
                         div.innerHTML = `
@@ -419,8 +519,7 @@
                             </div>
                         `;
                         div.querySelector('.play-btn').addEventListener('click', () => {
-                            const url = `player.html?title=${encodeURIComponent(movie.title)}&video=${encodeURIComponent(movie.video)}&index=${index}`;
-                            window.location.href = url;
+                            playVideo(movie.title, movie.video, movie.year);
                         });
                         container.appendChild(div);
                     });
@@ -436,21 +535,5 @@
         // Initialize the app
         init();
     </script>
-<div id="playback-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black bg-opacity-90">
-    <div class="relative w-full max-w-4xl bg-gray-900 rounded-xl overflow-hidden">
-      <button id="close-modal" class="absolute top-4 right-4 z-50 text-white hover:text-yellow-500 text-2xl transition">
-        <i class="fas fa-times"></i>
-      </button>
-      <div class="aspect-w-16 aspect-h-9">
-        <video id="modal-video" class="w-full" controls></video>
-      </div>
-      <div class="p-6">
-        <div class="flex justify-between items-start mb-4">
-          <div>
-            <h3 id="modal-title" class="text-2xl font-bold mb-1"></h3>
-            <div class="text-gray-400 text-sm">
-              <span><span id="modal-year"></span></span> • <span class="text-yellow-500">★ <span id="modal-rating"></span></span>
-            </div>
-          </div>
 </body>
 </html>
