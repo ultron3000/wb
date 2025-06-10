@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Modal styles */
+        .hidden {
+            display: none;
+        }
+        
         /* Custom scrollbar */
         ::-webkit-scrollbar {
             width: 10px;
@@ -91,7 +96,7 @@
                      alt="Warner Bros. Logo" 
                      class="h-12 mr-4">
                 <h1 class="text-3xl md:text-4xl font-bold text-yellow-400 glow-text">
-                    PICTURES CATALOG
+                    PICTURES
                 </h1>
             </div>
             <div class="flex items-center space-x-4">
@@ -283,6 +288,23 @@
         let sortBy = 'title'; // 'title' or 'year'
         let isDarkMode = true;
         
+        // Play video in modal or external player
+        function playVideo(title, videoUrl, index) {
+            if (videoUrl.includes('.mp4')) {
+                const modal = document.getElementById('playerModal');
+                const video = document.getElementById('modalVideo');
+                const titleElement = document.getElementById('modalTitle');
+                
+                titleElement.textContent = title;
+                video.src = videoUrl;
+                modal.classList.remove('hidden');
+                video.play();
+            } else {
+                const url = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(videoUrl)}&index=${index}`;
+                window.location.href = url;
+            }
+        }
+        
         // Initialize
         function init() {
             renderMovies();
@@ -310,6 +332,16 @@
             
             // Sort toggle
             sortToggle.addEventListener('click', toggleSort);
+            
+            // Modal close button
+            document.getElementById('closeModal').addEventListener('click', () => {
+                const modal = document.getElementById('playerModal');
+                const video = document.getElementById('modalVideo');
+                
+                video.pause();
+                video.src = '';
+                modal.classList.add('hidden');
+            });
         }
         
         // Update active category button
@@ -419,8 +451,7 @@
                             </div>
                         `;
                         div.querySelector('.play-btn').addEventListener('click', () => {
-                            const url = `player.html?title=${encodeURIComponent(movie.title)}&video=${encodeURIComponent(movie.video)}&index=${index}`;
-                            window.location.href = url;
+                            playVideo(movie.title, movie.video, index);
                         });
                         container.appendChild(div);
                     });
@@ -436,5 +467,18 @@
         // Initialize the app
         init();
     </script>
+
+    <!-- Modal Player -->
+    <div id="playerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl relative">
+            <button id="closeModal" class="absolute -top-10 right-0 text-2xl text-yellow-400 hover:text-yellow-300">
+                <i class="fas fa-times"></i>
+            </button>
+            <video id="modalVideo" controls class="w-full aspect-video">
+                Your browser does not support the video tag.
+            </video>
+            <h3 id="modalTitle" class="text-xl font-bold text-yellow-400 mt-2"></h3>
+        </div>
+    </div>
 </body>
 </html>
