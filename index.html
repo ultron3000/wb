@@ -176,8 +176,42 @@
         </div>
     </footer>
 
-    <script>
-        const movies = [
+    
+
+    <!-- Modal Player -->
+    <div id="playerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+        <div class="w-full max-w-4xl relative">
+            <button id="closeModal" class="absolute -top-10 right-0 text-2xl text-yellow-400 hover:text-yellow-300">
+                <i class="fas fa-times"></i>
+            </button>
+            <video id="modalVideo" controls class="w-full aspect-video bg-black">
+                Your browser does not support the video tag.
+            </video>
+            <div id="qualityControls" class="flex justify-center mt-2"></div>
+            <div id="playerError" class="hidden bg-red-900 text-white p-2 rounded mt-2 text-center"></div>
+            
+            <div class="flex justify-between mt-2">
+                <button onclick="playPreviousVideo()" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700">
+                    <i class="fas fa-step-backward mr-1"></i> Prev
+                </button>
+                <button onclick="toggleFullscreen()" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700">
+                    <i class="fas fa-expand mr-1"></i> Fullscreen
+                </button>
+                <button onclick="playNextVideo()" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700">
+                    Next <i class="fas fa-step-forward ml-1"></i>
+                </button>
+            </div>
+            
+            <h3 id="modalTitle" class="text-xl font-bold text-yellow-400 mt-2"></h3>
+            <div class="text-center text-gray-400 text-sm mt-1">
+                Keyboard shortcuts: Space=Play/Pause, Arrows=Seek, F=Fullscreen, N=Next, P=Previous, M=Mute
+            </div>
+        </div>
+    </div>
+
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+const movies = [
             { title: "Batman (1966)", video: "https://cdn-1.celestialodyssey.site/video-stream/088077ef/playlist.m3u8", image: "https://posterspy.com/wp-content/uploads/2024/07/batman-1966-2.jpg", category: "batman", year: 1966 },
             { title: "Batman (1989)", video: "https://sipt.cneeleyalin.sbs/v4/61/md9a5/cf-master.txt?v=1732868923", image: "https://i.pinimg.com/736x/ab/8d/eb/ab8deb68ba4b53124a5a7f4ab9545aae.jpg", category: "batman", year: 1989 },
             { title: "Batman Forever (1995)", video: "https://slob.hurlbertb.sbs/v4/qu/bknrl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTUyNjJhZWItMTZkNS00NDc4LTllNjUtYTg3NjczMzA5ZTViXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1995 },
@@ -294,15 +328,46 @@
                 const modal = document.getElementById('playerModal');
                 const video = document.getElementById('modalVideo');
                 const titleElement = document.getElementById('modalTitle');
+                const qualityControls = document.getElementById('qualityControls');
+                
+                // Show quality options if multiple sources available
+                if (typeof videoUrl === 'object') {
+                    qualityControls.innerHTML = Object.entries(videoUrl).map(([quality, url]) => 
+                        `<button class="quality-btn px-3 py-1 mx-1 rounded bg-gray-700 hover:bg-gray-600" 
+                                data-quality="${quality}" data-url="${url}">
+                            ${quality.toUpperCase()}
+                        </button>`
+                    ).join('');
+                } else {
+                    qualityControls.innerHTML = '';
+                }
                 
                 titleElement.textContent = title;
-                video.src = videoUrl;
+                video.src = typeof videoUrl === 'object' ? videoUrl.high || videoUrl.medium || videoUrl.low : videoUrl;
                 modal.classList.remove('hidden');
-                video.play();
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+                
+                video.addEventListener('error', () => {
+                    showError("Failed to load video. Please try a different quality or movie.");
+                });
+                
+                video.play().catch(e => {
+                    showError("Autoplay blocked. Please click play manually.");
+                });
+                
+                // Store current video info for next/prev navigation
+                currentVideo = { title, videoUrl, index };
             } else {
                 const url = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(videoUrl)}&index=${index}`;
                 window.location.href = url;
             }
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('playerError');
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+            setTimeout(() => errorElement.classList.add('hidden'), 5000);
         }
         
         // Initialize
@@ -333,15 +398,91 @@
             // Sort toggle
             sortToggle.addEventListener('click', toggleSort);
             
-            // Modal close button
-            document.getElementById('closeModal').addEventListener('click', () => {
+            // Modal controls
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
                 const modal = document.getElementById('playerModal');
-                const video = document.getElementById('modalVideo');
-                
-                video.pause();
-                video.src = '';
-                modal.classList.add('hidden');
+                if (!modal.classList.contains('hidden')) {
+                    switch (e.key) {
+                        case 'Escape': closeModal(); break;
+                        case ' ': 
+                            e.preventDefault();
+                            togglePlayPause();
+                            break;
+                        case 'ArrowRight': seekVideo(10); break;
+                        case 'ArrowLeft': seekVideo(-10); break;
+                        case 'f': toggleFullscreen(); break;
+                        case 'm': toggleMute(); break;
+                        case 'n': playNextVideo(); break;
+                        case 'p': playPreviousVideo(); break;
+                    }
+                }
             });
+            
+            // Quality selection
+            document.getElementById('qualityControls').addEventListener('click', (e) => {
+                if (e.target.classList.contains('quality-btn')) {
+                    const video = document.getElementById('modalVideo');
+                    const currentTime = video.currentTime;
+                    video.src = e.target.dataset.url;
+                    video.currentTime = currentTime;
+                    video.play().catch(e => showError("Please click play manually"));
+                }
+            });
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('playerModal');
+            const video = document.getElementById('modalVideo');
+            
+            video.pause();
+            video.src = '';
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+        
+        function togglePlayPause() {
+            const video = document.getElementById('modalVideo');
+            video.paused ? video.play() : video.pause();
+        }
+        
+        function seekVideo(seconds) {
+            const video = document.getElementById('modalVideo');
+            video.currentTime += seconds;
+        }
+        
+        function toggleFullscreen() {
+            const video = document.getElementById('modalVideo');
+            if (!document.fullscreenElement) {
+                video.requestFullscreen().catch(err => {
+                    showError("Fullscreen failed: " + err.message);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        function toggleMute() {
+            const video = document.getElementById('modalVideo');
+            video.muted = !video.muted;
+        }
+        
+        function playNextVideo() {
+            const filteredMovies = getFilteredMovies();
+            if (currentVideo && currentVideo.index < filteredMovies.length - 1) {
+                const nextMovie = filteredMovies[currentVideo.index + 1];
+                playVideo(nextMovie.title, nextMovie.video, currentVideo.index + 1);
+            }
+        }
+        
+        function playPreviousVideo() {
+            const filteredMovies = getFilteredMovies();
+            if (currentVideo && currentVideo.index > 0) {
+                const prevMovie = filteredMovies[currentVideo.index - 1];
+                playVideo(prevMovie.title, prevMovie.video, currentVideo.index - 1);
+            }
         }
         
         // Update active category button
@@ -466,19 +607,8 @@
         
         // Initialize the app
         init();
-    </script>
+});
+</script>
 
-    <!-- Modal Player -->
-    <div id="playerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
-        <div class="w-full max-w-4xl relative">
-            <button id="closeModal" class="absolute -top-10 right-0 text-2xl text-yellow-400 hover:text-yellow-300">
-                <i class="fas fa-times"></i>
-            </button>
-            <video id="modalVideo" controls class="w-full aspect-video">
-                Your browser does not support the video tag.
-            </video>
-            <h3 id="modalTitle" class="text-xl font-bold text-yellow-400 mt-2"></h3>
-        </div>
-    </div>
 </body>
 </html>
