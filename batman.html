@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Batman Universe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <!-- hls.js for playing .m3u8 in browsers that support MediaSource -->
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.1/dist/hls.min.js"></script>
+
+  <style>
+    /* Modal styles */
+    .hidden { display: none; }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #ffcc00; border-radius: 5px; }
+    ::-webkit-scrollbar-thumb:hover { background: #ffdd33; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity:1; transform:translateY(0);} }
+    .fade-in { animation: fadeIn 0.45s ease-out forwards; }
+
+    .movie-poster { transition: all 0.25s ease; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+    .movie-poster:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 15px 30px rgba(255,204,0,0.12); }
+
+    .glow-text { text-shadow: 0 0 10px rgba(255,204,0,0.7); }
+    .spinner { border:4px solid rgba(255,204,0,0.25); border-radius:50%; border-top:4px solid #ffcc00; width:40px; height:40px; animation:spin 1s linear infinite; margin:20px auto; }
+    @keyframes spin { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
+
+    /* small helpers */
+    .quality-btn { cursor:pointer; }
+  </style>
+</head>
+<body class="bg-black text-gray-100 min-h-screen">
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-black to-gray-900 py-6 px-4 shadow-lg border-b border-yellow-500">
+    <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+      <div class="flex items-center mb-4 md:mb-0">
+        <img src="https://hipfonts.com/wp-content/uploads/2020/07/Batman-Logo.jpg"
+             alt="Warner Bros. Logo" class="h-12 mr-4">
+        <h1 class="text-3xl md:text-4xl font-bold text-yellow-400 glow-text"></h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <button id="theme-toggle" class="text-yellow-400 hover:text-yellow-300 text-2xl"><i class="fas fa-moon"></i></button>
+        <button id="sort-toggle" class="text-yellow-400 hover:text-yellow-300 text-2xl"><i class="fas fa-sort-alpha-down"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search & filters -->
+  <section class="container mx-auto px-4 py-6">
+    <div class="search-container mb-6 relative">
+      <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-yellow-400"></i>
+      <input id="searchBar" type="text" placeholder="Search Batman movies..."
+             class="w-full pl-12 pr-4 py-3 bg-gray-900 border-2 border-yellow-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-500 text-white placeholder-yellow-400"/>
+    </div>
+
+  
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-semibold text-yellow-400"></h2>
+      <div class="text-sm text-gray-400"><span id="movie-count">0</span> movies available</div>
+    </div>
+  </section>
+
+  <!-- Movies Grid -->
+  <main class="container mx-auto px-4 pb-10">
+    <div id="loading" class="spinner"></div>
+    <div id="movies" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-900 border-t border-yellow-500 py-6">
+    <div class="container mx-auto px-4 text-center text-gray-400">
+      <p>Warner Bros. Pictures</p>
+    </div>
+  </footer>
+
+  <!-- Modal Player -->
+  <div id="playerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
+    <div class="w-full max-w-6xl relative px-4">
+      <button id="closeModal" class="absolute -top-10 right-0 text-2xl text-yellow-400 hover:text-yellow-300">
+        <i class="fas fa-times"></i>
+      </button>
+
+      <video id="modalVideo" controls class="w-full aspect-video bg-black" playsinline>
+        Your browser does not support the video tag.
+      </video>
+
+      <div id="qualityControls" class="flex justify-center mt-2"></div>
+      <div id="playerError" class="hidden bg-red-900 text-white p-2 rounded mt-2 text-center"></div>
+
+      <div class="flex justify-between mt-2">
+        <button id="prevBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-step-backward mr-1"></i> Prev</button>
+        <button id="fullscreenBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-expand mr-1"></i> Fullscreen</button>
+        <button id="nextBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700">Next <i class="fas fa-step-forward ml-1"></i></button>
+      </div>
+
+      <h3 id="modalTitle" class="text-xl font-bold text-yellow-400 mt-2 text-center"></h3>
+      <div class="text-center text-gray-400 text-sm mt-1">Keyboard: Space=Play/Pause, ←/→ Seek, F=Fullscreen, N/P Next/Prev, M=Mute</div>
+    </div>
+  </div>
+
+  <script>
+  // -------------------
+  // Movies array
+  // Replace or extend this array with your original list (I kept a sample set here).
+  // If you want, paste your full movies list exactly as in your original file into `movies`.
+  // -------------------
+  const movies = [
+    { title: "Batman (1966)", video: "https://sdqm.greenleafhospitality.space:443/v4/36/s5yaf/index-f2-v1-a1.txt", image: "https://posterspy.com/wp-content/uploads/2024/07/batman-1966-2.jpg", category: "batman", year: 1966 },
+    { title: "Batman (1989)", video: "https://sdqm.zenithflowengineering.shop:443/v4/61/md9a5/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/ab/8d/eb/ab8deb68ba4b53124a5a7f4ab9545aae.jpg", category: "batman", year: 1989 },
+    { title: "Batman Forever (1995)", video: "https://sr81.northfieldinnovation.store/v4/qu/bknrl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTUyNjJhZWItMTZkNS00NDc4LTllNjUtYTg3NjczMzA5ZTViXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1995 },
+    { title: "Batman & Robin (1997)", video: "https://scvo.greenlineinnovations.store:443/v4/ic/uv5sm/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYzU3ZjE3M2UtM2E4Ni00MDI5LTkyZGUtOTFkMGIyYjNjZGU3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1997 },
+    { title: "Batman Returns (1992)", video: "https://sh9f.silverlineacademia.online/v4/lf/563na/cf-master.txt?v=1732703738", image: "https://i.ebayimg.com/images/g/Dm4AAOSwcpViS587/s-l1200.jpg", category: "batman", year: 1992 },
+    { title: "Batman Begins (2005)", video: "https://sojg.hushfieldproductions.space:443/v4/db/ce9qg/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BODIyMDdhNTgtNDlmOC00MjUxLWE2NDItODA5MTdkNzY3ZTdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2005 },
+    { title: "The Dark Knight (2008)", video: "https://sg1.shegu.net/vip/p1/movie_mp4_h264/2008/4/6/4056/movie.4056.2008.1080p.H264.20190414191652.mp4?KEY1=GnxdxfT-8BQwGDPgf8IeMw&KEY2=1761276465&KEY3=1084999&KEY4=world&KEY7=febbox_video_quality_list_v3&KEY8=1084999", image: "https://i.pinimg.com/736x/02/1d/cb/021dcb81cf28bb9ec096eb618b20cc1a.jpg", category: "batman", year: 2008 },
+    { title: "The Dark Knight Rises (2012)", video: "https://sg1.shegu.net/vip/p1/movie_mp4_h264/2012/3/9/3839/movie.3839.2012.1080p.H264.20190909062616.mp4?KEY1=w8kxh54JaQBW-bQesDakuQ&KEY2=1761276512&KEY3=1086206&KEY4=world&KEY7=febbox_video_quality_list_v3&KEY8=1086206", image: "https://m.media-amazon.com/images/M/MV5BZDdkYjIyNTEtYjlkZC00NDdlLTgxYmUtMzI3NjM5YzQ0NjY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2012 },
+    { title: "The Batman (2022)", video: "https://sg1.shegu.net/vip/p1/movie_mp4_h264/2022/4/2/40102/movie.40102.2022.720p.H264.20220308222211.mp4?KEY1=UlnzD6WrIuvlYC6Rs6nbhw&KEY2=1761276543&KEY3=1083668&KEY4=world&KEY7=febbox_video_quality_list_v3&KEY8=1083668", image: "https://lh4.googleusercontent.com/proxy/sMOuygBNqLnw5VPQfDr4EIF4alH82NK4TgI6GVQZslNLojOZgncUzkDXaX_fOVIsWjh-y8ocrLLhTSrnFB6vJ3iV19OH5vgkpQ", category: "batman", year: 2022 },
+            
+  ];
+
+  // DOM references & state
+  const container = document.getElementById('movies');
+  const loadingElement = document.getElementById('loading');
+  const movieCountElement = document.getElementById('movie-count');
+  const categoryButtons = document.querySelectorAll('.category-btn');
+  const searchBar = document.getElementById('searchBar');
+  const themeToggle = document.getElementById('theme-toggle');
+  const sortToggle = document.getElementById('sort-toggle');
+
+  let currentCategory = 'all';
+  let sortBy = 'title';
+  let isDarkMode = true;
+  let currentVideo = null; // {title, videoUrl, index}
+  let currentHls = null;   // hls.js instance when using HLS
+
+  // Utility - show error
+  function showError(message) {
+    const e = document.getElementById('playerError');
+    e.textContent = message;
+    e.classList.remove('hidden');
+    setTimeout(()=> e.classList.add('hidden'), 4500);
+  }
+
+  // Determine if a URL *looks like* HLS manifest
+  function isHls(url) {
+    if (!url) return false;
+    const u = url.toLowerCase();
+    return u.includes('.m3u8') || u.includes('index.m3u8') || u.includes('master.m3u8') || u.endsWith('.m3u8') || u.includes('/hls') || u.includes('playlist.m3u8');
+  }
+
+  // Play video in modal: supports mp4 and m3u8 (via hls.js)
+  function playInModal(title, url, index) {
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('modalVideo');
+    const titleElement = document.getElementById('modalTitle');
+
+    // Clean prior hls instance & src
+    if (currentHls) {
+      try { currentHls.destroy(); } catch(e){/*ignore*/ }
+      currentHls = null;
+    }
+    video.pause();
+    video.removeAttribute('src');
+    video.load();
+
+    titleElement.textContent = title;
+
+    if (url.includes('.mp4')) {
+      // direct mp4
+      video.src = url;
+      video.load();
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      video.play().catch(e => console.warn('Autoplay blocked', e));
+
+    } else if (isHls(url)) {
+      // HLS — prefer playing inside modal using hls.js when supported
+      if (Hls && Hls.isSupported()) {
+        currentHls = new Hls();
+        currentHls.loadSource(url);
+        currentHls.attachMedia(video);
+        currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+          modal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+          video.play().catch(e => console.warn('Autoplay blocked', e));
+        });
+        currentHls.on(Hls.Events.ERROR, function(event, data) {
+          console.warn('HLS error', data);
+          // fallback: redirect to player.html if fatal
+          if (data && data.fatal) {
+            currentHls.destroy();
+            currentHls = null;
+            showError('HLS playback failed — opening external player.');
+            setTimeout(()=> redirectToExternalPlayer(title, url, index), 800);
+          }
+        });
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native HLS
+        video.src = url;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        video.play().catch(e => console.warn('Autoplay blocked', e));
+      } else {
+        // No HLS support — redirect to external player
+        showError('HLS not supported by this browser — opening external player.');
+        setTimeout(()=> redirectToExternalPlayer(title, url, index), 800);
+      }
+    } else {
+      // Unknown streaming format — redirect to external player (player.html)
+      redirectToExternalPlayer(title, url, index);
+      return;
+    }
+
+    // Save current video info
+    currentVideo = { title, videoUrl: url, index };
+  }
+
+  function redirectToExternalPlayer(title, url, index) {
+    const link = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(url)}&index=${index}`;
+    window.location.href = link;
+  }
+
+  // Top-level playVideo function (this is what buttons call)
+  function playVideo(title, videoUrl, index) {
+    try {
+      // If mp4 -> play in modal
+      if (videoUrl && videoUrl.includes('.mp4')) {
+        playInModal(title, videoUrl, index);
+        return;
+      }
+
+      // If HLS-like URL -> attempt to play in modal via hls.js
+      if (isHls(videoUrl)) {
+        playInModal(title, videoUrl, index);
+        return;
+      }
+
+      // Otherwise, redirect to external player.html
+      redirectToExternalPlayer(title, videoUrl, index);
+    } catch (err) {
+      console.error('playVideo error', err);
+      showError('Playback error — opening external player.');
+      setTimeout(()=> redirectToExternalPlayer(title, videoUrl, index), 600);
+    }
+  }
+
+  // Close modal & cleanup
+  function closeModal() {
+    const modal = document.getElementById('playerModal');
+    const video = document.getElementById('modalVideo');
+
+    if (currentHls) {
+      try { currentHls.destroy(); } catch(e) { /*ignore*/ }
+      currentHls = null;
+    }
+    video.pause();
+    video.removeAttribute('src');
+    try { video.load(); } catch(e){/*ignore*/}
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+
+  // Player controls helpers
+  function togglePlayPause() {
+    const video = document.getElementById('modalVideo');
+    if (!video) return;
+    video.paused ? video.play() : video.pause();
+  }
+  function seekVideo(seconds) {
+    const video = document.getElementById('modalVideo');
+    if (!video) return;
+    video.currentTime = Math.max(0, video.currentTime + seconds);
+  }
+  function toggleFullscreen() {
+    const video = document.getElementById('modalVideo');
+    if (!video) return;
+    if (!document.fullscreenElement) {
+      video.requestFullscreen().catch(err => showError('Fullscreen failed: ' + err.message));
+    } else {
+      document.exitFullscreen();
+    }
+  }
+  function toggleMute() {
+    const video = document.getElementById('modalVideo');
+    if (!video) return;
+    video.muted = !video.muted;
+  }
+
+  function getFilteredMovies() {
+    let filtered = [...movies];
+    // category
+    if (currentCategory !== 'all') filtered = filtered.filter(m => m.category === currentCategory);
+    // search
+    const searchTerm = (searchBar.value || '').toLowerCase();
+    if (searchTerm) filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(searchTerm));
+    // sort
+    filtered.sort((a,b) => {
+      if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
+      return (b.year||0) - (a.year||0);
+    });
+    return filtered;
+  }
+
+  function renderMovies() {
+    loadingElement.style.display = 'block';
+    container.innerHTML = '';
+    setTimeout(()=>{
+      const filtered = getFilteredMovies();
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="col-span-full text-center py-10">
+          <i class="fas fa-film text-5xl text-yellow-400 mb-4"></i>
+          <h3 class="text-xl font-semibold">No movies found</h3>
+          <p class="text-gray-400">Try adjusting your search or filter</p>
+        </div>`;
+      } else {
+        filtered.forEach((movie, idx) => {
+          const index = idx; // index within filtered
+          const el = document.createElement('div');
+          el.className = 'fade-in';
+          el.innerHTML = `
+            <div class="movie-poster bg-gray-800 rounded-lg overflow-hidden shadow-lg h-full flex flex-col">
+              <img src="${movie.image || ''}" alt="${(movie.title||'')}" class="w-full h-64 md:h-80 object-cover">
+              <div class="p-3 flex-grow">
+                <h3 class="font-bold text-yellow-400 truncate">${movie.title || 'Untitled'}</h3>
+                <div class="flex justify-between items-center mt-2">
+                  <span class="text-sm text-gray-400">${movie.year || ''}</span>
+                  <span class="text-xs px-2 py-1 bg-yellow-500 text-black rounded-full">${(movie.category||'other').toUpperCase()}</span>
+                </div>
+              </div>
+              <button class="play-btn w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold py-2 px-4 transition">
+                <i class="fas fa-play mr-2"></i> Watch Now
+              </button>
+            </div>
+          `;
+          el.querySelector('.play-btn').addEventListener('click', ()=> {
+            // compute real index in the full filtered array for next/prev navigation
+            const filteredList = getFilteredMovies();
+            const trueIndex = filteredList.indexOf(movie); // index inside filtered array
+            playVideo(movie.title, movie.video, trueIndex);
+          });
+          container.appendChild(el);
+        });
+      }
+      movieCountElement.textContent = filtered.length;
+      loadingElement.style.display = 'none';
+    }, 250);
+  }
+
+  // Event listeners setup
+  function setupEventListeners() {
+    categoryButtons.forEach(b => {
+      b.addEventListener('click', ()=> {
+        categoryButtons.forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        currentCategory = b.dataset.category || 'all';
+        renderMovies();
+      });
+    });
+
+    searchBar.addEventListener('input', renderMovies);
+
+    themeToggle.addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      if (isDarkMode) {
+        document.body.classList.remove('bg-gray-100','text-gray-900');
+        document.body.classList.add('bg-black','text-gray-100');
+        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+      } else {
+        document.body.classList.remove('bg-black','text-gray-100');
+        document.body.classList.add('bg-gray-100','text-gray-900');
+        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+    });
+
+    sortToggle.addEventListener('click', ()=> {
+      sortBy = sortBy === 'title' ? 'year' : 'title';
+      sortToggle.innerHTML = sortBy === 'title' ? '<i class=\"fas fa-sort-alpha-down\"></i>' : '<i class=\"fas fa-sort-numeric-down\"></i>';
+      renderMovies();
+    });
+
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+    document.getElementById('nextBtn').addEventListener('click', playNextVideo);
+    document.getElementById('prevBtn').addEventListener('click', playPreviousVideo);
+
+    // keyboard
+    document.addEventListener('keydown', (e) => {
+      const modal = document.getElementById('playerModal');
+      if (!modal.classList.contains('hidden')) {
+        switch(e.key) {
+          case 'Escape': closeModal(); break;
+          case ' ': e.preventDefault(); togglePlayPause(); break;
+          case 'ArrowRight': seekVideo(10); break;
+          case 'ArrowLeft': seekVideo(-10); break;
+          case 'f': toggleFullscreen(); break;
+          case 'm': toggleMute(); break;
+          case 'n': playNextVideo(); break;
+          case 'p': playPreviousVideo(); break;
+        }
+      }
+    });
+  }
+
+  // Next/Prev navigation based on filtered list + currentVideo.index (index inside filtered list)
+  function playNextVideo() {
+    const filtered = getFilteredMovies();
+    if (!currentVideo) return;
+    const idx = currentVideo.index;
+    if (idx < filtered.length - 1) {
+      const next = filtered[idx + 1];
+      playVideo(next.title, next.video, idx + 1);
+    } else {
+      showError('No next video.');
+    }
+  }
+  function playPreviousVideo() {
+    const filtered = getFilteredMovies();
+    if (!currentVideo) return;
+    const idx = currentVideo.index;
+    if (idx > 0) {
+      const prev = filtered[idx - 1];
+      playVideo(prev.title, prev.video, idx - 1);
+    } else {
+      showError('No previous video.');
+    }
+  }
+
+  // init
+  function init() {
+    renderMovies();
+    setupEventListeners();
+  }
+  window.addEventListener('DOMContentLoaded', init);
+
+  // expose playVideo to global (so inline onclick works if used)
+  window.playVideo = playVideo;
+  </script>
+</body>
+</html>
