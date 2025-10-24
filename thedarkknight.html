@@ -569,38 +569,11 @@
 </body>
 </html>
 <style>
-/* Full-page electric border */
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #111;
-  overflow: hidden;
-}
 
-.electric-border-page {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 9999;
-  border: 4px solid #7df9ff;
-  border-radius: 0;
-  box-shadow:
-    0 0 8px #7df9ff,
-    0 0 16px #7df9ff,
-    0 0 32px #7df9ff;
-  animation: flicker 2s infinite;
-}
+  <!-- Canvas for click sparks -->
+<canvas id="sparkCanvasPage"></canvas>
 
-@keyframes flicker {
-  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
-  20%, 22%, 24%, 55% { opacity: 0.85; }
-}
-
-/* Click sparks canvas */
+<style>
 #sparkCanvasPage {
   position: fixed;
   top: 0;
@@ -612,27 +585,22 @@ html, body {
 }
 </style>
 
-<!-- Electric border overlay -->
-<div class="electric-border-page"></div>
-<canvas id="sparkCanvasPage"></canvas>
-
 <script>
 // Click sparks for full page
 const canvas = document.getElementById('sparkCanvasPage');
 const ctx = canvas.getContext('2d');
 const sparks = [];
-const duration = 400;
-const sparkCount = 8;
-const sparkSize = 10;
-const sparkRadius = 15;
-const sparkColor = '#fff';
-const easing = t => t*(2-t); // ease-out
+const duration = 300;       // duration of each spark
+const sparkCount = 6;       // sparks per click
+const sparkSize = 8;        // line length
+const sparkRadius = 12;     // max distance
+const sparkColor = '#00f2ff'; // color of sparks
+const easing = t => t*(2-t);  // ease-out
 
 function resizeCanvas() {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
 }
-
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
@@ -652,7 +620,7 @@ function draw() {
     const x2 = s.x + (dist + line) * Math.cos(s.angle);
     const y2 = s.y + (dist + line) * Math.sin(s.angle);
     ctx.strokeStyle = sparkColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(x1,y1);
     ctx.lineTo(x2,y2);
@@ -666,7 +634,12 @@ document.addEventListener('click', e => {
   const x = e.clientX;
   const y = e.clientY;
   for(let i=0;i<sparkCount;i++){
-    sparks.push({x, y, angle: (2*Math.PI*i)/sparkCount, startTime: performance.now()});
+    sparks.push({
+      x, 
+      y, 
+      angle: (2*Math.PI*i)/sparkCount, 
+      startTime: performance.now()
+    });
   }
 });
 </script>
