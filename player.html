@@ -78,20 +78,50 @@
       visibility: visible;
       opacity: 1;
     }
-    @media (max-width: 768px) {
-      .controls-container {
-        padding: 0.5rem;
-      }
-      .control-btn {
-        padding: 0.5rem;
-      }
-      .volume-container {
-        display: none;
-      }
-      .mobile-volume {
-        display: block;
-      }
+    <style>
+  /* Existing styles... */
+  .tooltip-parent:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  /* ✅ Fullscreen alignment fix */
+  :fullscreen .video-container,
+  .video-container:fullscreen {
+    padding-bottom: 0 !important;
+    height: 100vh !important;
+    width: 100vw !important;
+    border-radius: 0 !important;
+  }
+
+  :fullscreen video,
+  .video-container:fullscreen video {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover;
+  }
+
+  .video-container:fullscreen .controls-container {
+    opacity: 1 !important;
+  }
+
+  @media (max-width: 768px) {
+    .controls-container {
+      padding: 0.5rem;
     }
+    .control-btn {
+      padding: 0.5rem;
+    }
+    .volume-container {
+      display: none;
+    }
+    .mobile-volume {
+      display: block;
+    }
+  }
+</style>
+
+   
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col items-center p-4 md:p-8">
@@ -107,9 +137,9 @@
     <!-- Header -->
     <div class="flex justify-between items-center mb-4 md:mb-6">
       <h1 id="movie-title" class="text-2xl md:text-3xl font-bold text-amber-400 truncate max-w-xs md:max-w-md">Movie Title</h1>
-      <a href="index.html" class="flex items-center text-gray-300 hover:text-amber-400 transition">
+      <a href="" class="flex items-center text-gray-300 hover:text-amber-400 transition">
         <i class="fas fa-arrow-left mr-2"></i>
-        <span class="hidden md:inline">Back to Movies</span>
+        <span class="hidden md:inline"></span>
       </a>
     </div>
 
@@ -683,16 +713,27 @@
       }
     }
 
-    // Toggle fullscreen
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        videoContainer.requestFullscreen().catch(err => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
-        });
-      } else {
-        document.exitFullscreen();
+    // ✅ Fullscreen with auto-rotate on mobile
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    videoContainer.requestFullscreen().then(() => {
+      // Try to lock landscape on supported devices
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
       }
+    }).catch(err => {
+      console.error(`Error attempting to enable fullscreen: ${err.message}`);
+    });
+  } else {
+    document.exitFullscreen();
+    // Unlock orientation when exiting fullscreen
+    if (screen.orientation && screen.orientation.unlock) {
+      screen.orientation.unlock();
     }
+  }
+}
+
+
 
     // Toggle settings menu
     function toggleMenu(menu) {
