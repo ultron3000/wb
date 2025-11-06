@@ -186,15 +186,15 @@
 <div class="container mx-auto px-4 py-8 max-w-7xl">
 
 <!-- Video Header -->
-<div style="position: relative; width: 100%; height: 500px; overflow: hidden;">
-  <iframe 
-    src="https://www.youtube.com/embed/abyQXe3hxRc?autoplay=1&mute=1&loop=1&playlist=abyQXe3hxRc&controls=0&modestbranding=1
-"
-    frameborder="0" 
-    allow="autoplay; fullscreen" 
-    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;">
-  </iframe>
-</div>
+<div class="relative w-full h-[400px] md:h-[500px] overflow-hidden">
+  <div class="absolute top-0 left-0 w-full h-full overflow-hidden">
+    <iframe
+      src="https://www.youtube.com/embed/abyQXe3hxRc?autoplay=1&mute=1&loop=1&playlist=abyQXe3hxRc&controls=0&modestbranding=1"
+      frameborder="0"
+      allow="autoplay; fullscreen"
+      class="absolute top-1/2 left-1/2 w-[177.78vh] h-[100vh] min-w-full min-h-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+    ></iframe>
+  </div>
 
   <!-- Animated Logo at Top-Left -->
   <img 
