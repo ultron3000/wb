@@ -31,6 +31,12 @@
 
     /* small helpers */
     .quality-btn { cursor:pointer; }
+
+    /* Tukaram/Hawkeye modal-player responsive */
+    #playerModal video, #playerModal iframe { width: 100%; height: auto; max-height: 70vh; background: black; }
+    #playerModal .modal-inner { background: transparent; padding: 0; }
+    #playerModal .controls-row { margin-top: 8px; }
+    #playerError { display: none; }
   </style>
 </head>
 <body class="bg-black text-gray-100 min-h-screen">
@@ -145,23 +151,29 @@
     </div>
   </footer>
 
-  <!-- Modal Player -->
+  <!-- Modal Player (existing markup kept, behavior replaced with Hawkeye logic) -->
   <div id="playerModal" class="hidden fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center">
-    <div class="w-full max-w-6xl relative px-4">
+    <div class="w-full max-w-6xl relative px-4 modal-inner">
       <button id="closeModal" class="absolute -top-10 right-0 text-2xl text-yellow-400 hover:text-yellow-300">
         <i class="fas fa-times"></i>
       </button>
 
-      <video id="modalVideo" controls class="w-full aspect-video bg-black" playsinline>
-        Your browser does not support the video tag.
-      </video>
+      <!-- video / iframe will be used here -->
+      <div id="playerWrapper" class="bg-black rounded-md overflow-hidden">
+        <video id="modalVideo" controls class="w-full aspect-video bg-black" playsinline>
+          Your browser does not support the video tag.
+        </video>
+      </div>
 
       <div id="qualityControls" class="flex justify-center mt-2"></div>
       <div id="playerError" class="hidden bg-red-900 text-white p-2 rounded mt-2 text-center"></div>
 
-      <div class="flex justify-between mt-2">
+      <div class="flex justify-between mt-2 controls-row">
         <button id="prevBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-step-backward mr-1"></i> Prev</button>
-        <button id="fullscreenBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-expand mr-1"></i> Fullscreen</button>
+        <div class="flex gap-2">
+          <button id="playPauseBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-play mr-1"></i> Play</button>
+          <button id="fullscreenBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700"><i class="fas fa-expand mr-1"></i> Fullscreen</button>
+        </div>
         <button id="nextBtn" class="px-3 py-1 bg-gray-800 text-yellow-400 rounded hover:bg-gray-700">Next <i class="fas fa-step-forward ml-1"></i></button>
       </div>
 
@@ -172,25 +184,23 @@
 
   <script>
   // -------------------
-  // Movies array
-  // Replace or extend this array with your original list (I kept a sample set here).
-  // If you want, paste your full movies list exactly as in your original file into `movies`.
+  // Movies array (left unchanged — as you requested "you can skip the movies array")
   // -------------------
   const movies = [
-    { title: "Batman (1966)", video: "https://cdn-1.celestialodyssey.site/video-stream/088077ef/playlist.m3u8", image: "https://posterspy.com/wp-content/uploads/2024/07/batman-1966-2.jpg", category: "batman", year: 1966 },
-            { title: "Batman (1989)", video: "https://sipt.cneeleyalin.sbs/v4/61/md9a5/cf-master.txt?v=1732868923", image: "https://i.pinimg.com/736x/ab/8d/eb/ab8deb68ba4b53124a5a7f4ab9545aae.jpg", category: "batman", year: 1989 },
-            { title: "Batman Forever (1995)", video: "https://slob.hurlbertb.sbs/v4/qu/bknrl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTUyNjJhZWItMTZkNS00NDc4LTllNjUtYTg3NjczMzA5ZTViXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1995 },
-            { title: "Batman & Robin (1997)", video: "https://sxic.hershpdelah.sbs:443/v4/ic/uv5sm/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYzU3ZjE3M2UtM2E4Ni00MDI5LTkyZGUtOTFkMGIyYjNjZGU3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1997 },
-            { title: "Batman Returns (1992)", video: "https://sdqm.dkneropbr.sbs:443/v4/lf/563na/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/Dm4AAOSwcpViS587/s-l1200.jpg", category: "batman", year: 1992 },
-            { title: "Batman Begins (2005)", video: "https://sxic.biggsupndfun.sbs/v4/db/ce9qg/cf-master.txt?v=1735243789", image: "https://m.media-amazon.com/images/M/MV5BODIyMDdhNTgtNDlmOC00MjUxLWE2NDItODA5MTdkNzY3ZTdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2005 },
-            { title: "The Dark Knight (2008)", video: "https://sdqm.hershpdelah.sbs/v4/ck/h5fua/cf-master.txt?v=1735247286", image: "https://i.pinimg.com/736x/02/1d/cb/021dcb81cf28bb9ec096eb618b20cc1a.jpg", category: "batman", year: 2008 },
-            { title: "The Dark Knight Rises (2012)", video: "https://sipt.ulrikeumdqputm.sbs:443/v4/qu/mriob/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BZDdkYjIyNTEtYjlkZC00NDdlLTgxYmUtMzI3NjM5YzQ0NjY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2012 },
-            { title: "The Batman (2022)", video: "https://vip.opstream14.com/20220419/8794_04aa0944/index.m3u8", image: "https://lh4.googleusercontent.com/proxy/sMOuygBNqLnw5VPQfDr4EIF4alH82NK4TgI6GVQZslNLojOZgncUzkDXaX_fOVIsWjh-y8ocrLLhTSrnFB6vJ3iV19OH5vgkpQ", category: "batman", year: 2022 },
-            { title: "Superman (1978)", video: "https://sskt.broadcastecosystem.cyou:443/v4/36/hcati/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/79/76/ec/7976ec0b8d93f8b341e9657b13480f3c.jpg", category: "superman", year: 1978 },
-            { title: "Superman II (1980)", video: "https://se9d.technologyapproximate.shop/v4/lf/xd9ux/cf-master.txt?v=1733329699", image: "https://m.media-amazon.com/images/M/MV5BNzg5ZjJkNGEtNzhjNy00YzI4LTlkZjItNTViNmYxNGZlZWE2XkEyXkFqcGc@._V1_.jpg", category: "superman", year: 1980 },
-            { title: "Superman III (1983)", video: "https://sr81.architectureemerging.shop/v4/xq/scizt/cf-master.txt?v=1733147917", image: "https://i.ebayimg.com/images/g/oboAAOSwHVNjM8gt/s-l400.jpg", category: "superman", year: 1983 },
-            { title: "Superman IV: The Quest for Peace (1987)", video: "https://s6sy.transformedintroduction.shop:443/v4/db/t6lee/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/aQ1d9OB0xtAenIL0Ke3xV17St4S.jpg", category: "superman", year: 1987 },
-            { title: "Superman Returns (2006)", video: "https://sdqm.dashboardexecution.cyou:443/v4/36/bjc6b/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p159107_p_v10_ae.jpg", category: "superman", year: 2006 },  
+    { title: "Batman (1966)", video: "https://sdqm.greenleafhospitality.space:443/v4/36/s5yaf/index-f2-v1-a1.txt", image: "https://posterspy.com/wp-content/uploads/2024/07/batman-1966-2.jpg", category: "batman", year: 1966 },
+    { title: "Batman (1989)", video: "https://sdqm.zenithflowengineering.shop:443/v4/61/md9a5/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/ab/8d/eb/ab8deb68ba4b53124a5a7f4ab9545aae.jpg", category: "batman", year: 1989 },
+    { title: "Batman Forever (1995)", video: "https://sr81.northfieldinnovation.store/v4/qu/bknrl/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTUyNjJhZWItMTZkNS00NDc4LTllNjUtYTg3NjczMzA5ZTViXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1995 },
+    { title: "Batman & Robin (1997)", video: "https://scvo.greenlineinnovations.store:443/v4/ic/uv5sm/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYzU3ZjE3M2UtM2E4Ni00MDI5LTkyZGUtOTFkMGIyYjNjZGU3XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 1997 },
+    { title: "Batman Returns (1992)", video: "https://sh9f.silverlineacademia.online/v4/lf/563na/cf-master.txt?v=1732703738", image: "https://i.ebayimg.com/images/g/Dm4AAOSwcpViS587/s-l1200.jpg", category: "batman", year: 1992 },
+    { title: "Batman Begins (2005)", video: "https://sojg.hushfieldproductions.space:443/v4/db/ce9qg/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BODIyMDdhNTgtNDlmOC00MjUxLWE2NDItODA5MTdkNzY3ZTdhXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2005 },
+    { title: "The Dark Knight (2008)", video: "https://svz.celestiorstudio.cyou/v4/ty/59vmp/cf-master.txt?v=1756293791", image: "https://i.pinimg.com/736x/02/1d/cb/021dcb81cf28bb9ec096eb618b20cc1a.jpg", category: "batman", year: 2008 },
+    { title: "The Dark Knight Rises (2012)", video: "https://queenselti.me/bddbit/uwu.m3u8", image: "https://m.media-amazon.com/images/M/MV5BZDdkYjIyNTEtYjlkZC00NDdlLTgxYmUtMzI3NjM5YzQ0NjY5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "batman", year: 2012 },
+    { title: "The Batman (2022)", video: "https://vip.opstream14.com/20220419/8794_04aa0944/index.m3u8", image: "https://lh4.googleusercontent.com/proxy/sMOuygBNqLnw5VPQfDr4EIF4alH82NK4TgI6GVQZslNLojOZgncUzkDXaX_fOVIsWjh-y8ocrLLhTSrnFB6vJ3iV19OH5vgkpQ", category: "batman", year: 2022 },
+    { title: "Superman (1978)", video: "https://sskt.broadcastecosystem.cyou:443/v4/36/hcati/index-f2-v1-a1.txt", image: "https://i.pinimg.com/736x/79/76/ec/7976ec0b8d93f8b341e9657b13480f3c.jpg", category: "superman", year: 1978 },
+    { title: "Superman II (1980)", video: "https://se9d.technologyapproximate.shop/v4/lf/xd9ux/cf-master.txt?v=1733329699", image: "https://m.media-amazon.com/images/M/MV5BNzg5ZjJkNGEtNzhjNy00YzI4LTlkZjItNTViNmYxNGZlZWE2XkEyXkFqcGc@._V1_.jpg", category: "superman", year: 1980 },
+    { title: "Superman III (1983)", video: "https://sr81.architectureemerging.shop/v4/xq/scizt/cf-master.txt?v=1733147917", image: "https://i.ebayimg.com/images/g/oboAAOSwHVNjM8gt/s-l400.jpg", category: "superman", year: 1983 },
+    { title: "Superman IV: The Quest for Peace (1987)", video: "https://s6sy.transformedintroduction.shop:443/v4/db/t6lee/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/aQ1d9OB0xtAenIL0Ke3xV17St4S.jpg", category: "superman", year: 1987 },
+    { title: "Superman Returns (2006)", video: "https://sdqm.dashboardexecution.cyou:443/v4/36/bjc6b/index-f2-v1-a1.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p159107_p_v10_ae.jpg", category: "superman", year: 2006 },  
             { title: "Man of Steel (2013)", video: "https://qpljyz39awcoenfd.aigearworldmeshchain.shop/5h9v8qmzbluh/hls3/01/00375/a7nr0mzh4e7c_h/master.txt", image: "https://i.pinimg.com/736x/ec/f7/32/ecf732e06f0b5cb325e84e78c5ff89c1.jpg", category: "superman", year: 2013 },
             { title: "Superman (2025)", video: "https://drrh37sqosrl.careandcure.store/galk8e9m4l6if/hls3/01/10956/0yw5nfoeajja_,l,n,h,.urlset/master.txt", image: "https://posterspy.com/wp-content/uploads/2025/07/03-2.jpg", category: "superman", year: 2025 },
             { title: "Batman v Superman: Dawn of Justice (2016)", video: "https://cdn-1.celestialodyssey.site/video-stream/c632bac1/playlist.m3u8", image: "https://m.media-amazon.com/images/M/MV5BZTJkYjdmYjYtOGMyNC00ZGU1LThkY2ItYTc1OTVlMmE2YWY1XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg", category: "justice", year: 2016 },
@@ -208,10 +218,10 @@
             { title: "Birds of Prey (and the Fantabulous Emancipation of One Harley Quinn)", video: "https://sh9f.boehmerrbfjx.sbs/v4/9a/xkae8/index-f1-v1-a1.txt", image: "https://lh4.googleusercontent.com/proxy/u6_KjZW6aNvR4B0gYQeFlNgQvhQm_z1qdw-Tt-O7bpmrRx0pKjdhKW0Sz3G_CLYtEP_3saUNYcsc19Zag0SLNNXxVhaoXel_3KpOZk6HMZxgIu3b", category: "justice", year: 2020 },
             { title: "Joker", video: "https://sojg.baugherhatchp.sbs/v4/np/n1lfh/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/7171-V0MHlL._AC_UF1000,1000_QL80_.jpg", category: "batman", year: 2019 },
             { title: "Joker: Folie à Deux", video: "https://s9dz.squiressill.sbs/v4/6s/hdl6o/index-f1-v1-a1.txt", image: "https://alternativemovieposters.com/wp-content/uploads/2024/05/Will-Copeland_Joker2.jpg", category: "batman", year: 2024 },
-            { title: "Ocean's Eleven", video: "https://sxic.mooringcarmel.sbs:443/v4/il/81j9q/index-f1-v1-a1.txt", image: "https://www.movieposters.com/cdn/shop/products/edbd4441ef9ce8292d036019d7e580d2_7deab0ec-1bc8-415d-a808-a41b579725b9_grande.jpg?v=1573594964", category: "other", year: 2001 },
-            { title: "Ocean's Twelve", video: "https://sskt.floraaabaa.sbs:443/v4/us/et9s5/index-f2-v1-a1.txt", image: "https://images.moviesanywhere.com/3a029a7436d6ce89101ca844dc45f625/c5434b87-7b94-4981-bae1-4b850502a5ad.jpg", category: "other", year: 2004 },
-            { title: "Ocean's Thirteen", video: "https://sxic.hershpdelah.sbs/v4/qu/paewu/cf-master.txt?v=1735319012", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p165096_p_v13_ac.jpg", category: "other", year: 2007 },
-            { title: "Ocean's 8", video: "https://sg1.shegu.net/vip/p1/movie_mp4_h264/2018/6/2/6462/movie.6462.2018.1080p.H264.20190426030443.mp4?KEY1=xiNyl62A9aVx6MD0Wzv6rg&KEY2=1761104529&KEY3=1082151&KEY4=world&KEY7=febbox_video_quality_list_v3&KEY8=1082151", image: "https://musicart.xboxlive.com/7/e6be5000-0000-0000-0000-000000000002/504/image.jpg", category: "other", year: 2018 },
+            { title: "Ocean's Eleven", video: "https://slp.drivonaesthetic.cyou/v4/m9/kjl99/cf-master.txt?v=1756806397", image: "https://blackheartprints.com/cdn/shop/files/OceansEleven2001MovieTeaserPosterWeb_600x.jpg?v=1706703577", category: "other", year: 2001 },
+            { title: "Ocean's Twelve", video: "https://e9ccawf5esyyffhp.auronamedicalgroup.online/xcjcmoh7mtij/hls3/01/00354/y8qv81j7fyug_h/master.txt", image: "https://images.moviesanywhere.com/3a029a7436d6ce89101ca844dc45f625/c5434b87-7b94-4981-bae1-4b850502a5ad.jpg", category: "other", year: 2004 },
+            { title: "Ocean's Thirteen", video: "https://okqtss1gbbnca8e.aurorionacademy.cyou/m2q5ea5w42hk/hls3/01/00354/1z78ss41734e_h/master.txt", image: "https://resizing.flixster.com/-XZAfHZM39UwaGJIFWKAE8fS0ak=/v3/t/assets/p165096_p_v13_ac.jpg", category: "other", year: 2007 },
+            { title: "Ocean's 8", video: "https://sjx.novacrestnetwork.online/v4/epu/txmvh/cf-master.txt?v=1758887935", image: "https://musicart.xboxlive.com/7/e6be5000-0000-0000-0000-000000000002/504/image.jpg", category: "other", year: 2018 },
             { title: "Blue Beetle", video: "https://sj3l.wrendresslerle.sbs:443/v4/k5/xspo1/index-f2-v1-a1.txt", image: "https://theposterdepot.com/cdn/shop/files/bluebeetle0820202301_580x.jpg?v=1700782793", category: "justice", year: 2023 },
             { title: "Green Lantern", video: "https://sskt.mazedukhkortfj.sbs:443/v4/ck/gn5w8/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/71-ckdWvqfL._AC_UF894,1000_QL80_.jpg", category: "justice", year: 2011 },
             { title: "The Meg", video: "https://sdqm.monkberga.sbs/v4/ox/mdfmu/cf-master.txt?v=1733139493", image: "https://images.fineartamerica.com/images/artworkimages/medium/1/the-meg-theater-poster-movie-poster-prints.jpg", category: "other", year: 2018 },
@@ -230,23 +240,27 @@
             { title: "Tomb Raider", video: "https://slob.alenapark.sbs/v4/ox/6nmuf/index-f1-v1-a1.txt", image: "https://live.staticflickr.com/899/39262888080_3e4848c51c_b.jpg", category: "other", year: 2018 },
             { title: "Geostorm", video: "https://skra.mazedukhkortfj.sbs:443/v4/ck/i8k8l/index-f2-v1-a1.txt", image: "https://external-preview.redd.it/YTH-ht1vg2ythe7lLgjQhirCZOIgNHTWmw7fC5ZS64A.jpg?width=640&crop=smart&auto=webp&s=ca5e13c843d3523b6ab460a24a0455d970ccf32a", category: "other", year: 2017 },
             { title: "War Dogs", video: "https://sskt.coombsneils.sbs:443/v4/ox/8ejg8/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BYjZiYTQxZTItY2Q2YS00MjM4LWFkMzQtZTRmNDg0NjE3YzU0XkEyXkFqcGc@._V1_.jpg", category: "other", year: 2016 },
-            { title: "Kong: Skull Island", video: "https://spuc.madrigalcajig.sbs/v4/61/kwydc/index-f1-v1-a1.txt", image: "https://i.pinimg.com/736x/06/96/f5/0696f51f664f753b9f94e0375742c888.jpg", category: "godzilla", year: 2017 },
-            { title: "Godzilla", video: "https://s3ae.sralphqesrob.sbs:443/v4/xq/bkyqy/index-f2-v1-a1.txt", image: "https://preview.redd.it/the-godzilla-2014-posters-will-remain-the-best-of-all-v0-05le1q7qh0ea1.jpg?width=1000&format=pjpg&auto=webp&s=108474acedda46978fea285d6e174dedd135c424", category: "godzilla", year: 2014 },
-            { title: "Godzilla: King of the Monsters", video: "https://sxic.shahcanna.sbs:443/v4/qu/bu6wg/index-f2-v1-a1.txt", image: "https://i.ebayimg.com/images/g/r64AAOSwTaRc8c8k/s-l1200.jpg", category: "godzilla", year: 2019 },
-            { title: "Godzilla vs. Kong", video: "https://sdqm.squiressill.sbs/v4/il/xltta/index-f2-v1-a1.txt", image: "https://preview.redd.it/ive-just-noticed-these-posters-recently-they-all-seem-to-v0-7n3vir46w8wc1.jpg?width=640&crop=smart&auto=webp&s=f08b754a2bb4ef3d7fb14e5129f0ccf8188af421", category: "godzilla", year: 2021 },
-            { title: "Godzilla x Kong: The New Empire", video: "https://sr81.coombsneils.sbs/v4/k5/xh5ei/index-f1-v1-a1.txt", image: "https://images-wixmp-ed30a86b8c4ca887773594c2.wixmp.com/f/e81c3666-def3-4919-86b8-6e673b87031d/dh2u0a8-606c48eb-cd98-4ef9-9d99-66dd964aca4e.jpg/v1/fill/w_1280,h_1920,q_75,strp/godzilla_x_kong_the_new_empire_fan_poster_by_gravelord78_dh2u0a8-fullview.jpg?token=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1cm46YXBwOjdlMGQxODg5ODIyNjQzNzNhNWYwZDQxNWVhMGQyNmUwIiwiaXNzIjoidXJuOmFwcDo3ZTBkMTg4OTgyMjY0MzczYTVmMGQ0MTVlYTBkMjZlMCIsIm9iaiI6W1t7ImhlaWdodCI6Ijw9MTkyMCIsInBhdGgiOiJcL2ZcL2U4MWMzNjY2LWRlZjMtNDkxOS04NmI4LTZlNjczYjg3MDMxZFwvZGgydTBhOC02MDZjNDhlYi1jZDk4LTRlZjktOWQ5OS02NmRkOTY0YWNhNGUuanBnIiwid2lkdGgiOiI8PTEyODAifV1dLCJhdWQiOlsidXJuOnNlcnZpY2U6aW1hZ2Uub3BlcmF0aW9ucyJdfQ.xJlMcdTNQxlyod34KK5GJdgLuXUHnbmUZFJb9JRTJXc", category: "godzilla", year: 2024 },
-            { title: "King Arthur: Legend of the Sword", video: "https://m68btj72qc.cdn-centaurus.com/hls2/01/01203/f81b1hvnezfl_o/master.m3u8?t=eSZoZz0V5sNgBDd7YXBom26ewzp5RBZj7eAW4gRxXmM&s=1747719636&e=129600&f=6016652&srv=6Y0nzgZi8BCfuhZ&i=0.4&sp=500&p1=6Y0nzgZi8BCfuhZ&p2=6Y0nzgZi8BCfuhZ&asn=24554", image: "https://mir-s3-cdn-cf.behance.net/project_modules/disp/034c0682752173.5d2859e5abd97.jpg", category: "other", year: 2017 },
-            { title: "The Matrix", video: "https://gs2xxawljjoi.cdn-centaurus.com/hls2/01/00351/yyx4to862vvv_h/master.m3u8?t=E99lvTmisG2ljIXiBOiJ93v8n_vha-Wv4yySTPUba_k&s=1747763094&e=129600&f=1758831&srv=3FjgDmcnea8S35m&i=0.4&sp=500&p1=3FjgDmcnea8S35m&p2=3FjgDmcnea8S35m&asn=24554", image: "https://www.limitedruns.com/media/cache/ee/c4/eec41829a5cc47c6462464e89d173883.jpg", category: "matrix", year: 1999 },
-            { title: "The Matrix Reloaded", video: "https://spuc.mcgaugheyjyiy.sbs:443/v4/vz/gkdpe/index-f2-v1-a1.txt", image: "https://media-cache.cinematerial.com/p/500x/tmeigl34/the-matrix-reloaded-movie-poster.jpg?v=1456291958", category: "matrix", year: 2003 },
-            { title: "The Matrix Revolutions", video: "https://sxic.bradburyg.sbs:443/v4/pq/m9r5u/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/tyXwreXv4pfo4T4aplTKIp7f9GI.jpg", category: "matrix", year: 2003 },
-            { title: "The Matrix Resurrections", video: "https://sxic.angelobo.sbs/v4/m9/jano9/index-f1-v1-a1.txt", image: "https://resizing.flixster.com/azk7WCNkOsS1Yb2QOZ6nYBMaVZs=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2Q4ZWE4ZTUwLTI5MTMtNDQ5Yi05M2Y5LTVlNWVlNjU5YWRmZC5qcGc=", category: "matrix", year: 2021 },
-            { title: "Dunkirk", video: "https://sipt.yevettesh.sbs/v4/9a/dbsbh/index-f1-v1-a1.txt", image: "https://i.ebayimg.com/images/g/E58AAOSwTglYm52D/s-l1200.jpg", category: "other", year: 2017 },
+            { title: "Kong: Skull Island", video: "https://queenselti.me/lawp/uwu.m3u8", image: "https://i.pinimg.com/736x/06/96/f5/0696f51f664f753b9f94e0375742c888.jpg", category: "godzilla", year: 2017 },
+        { title: "Godzilla", video: "https://54pkdcyxbsxbermn.mindspireleadership.sbs/jxnu44rmvdct/hls3/01/00387/b0zwooajk6r5_h/master.txt", image: "https://i.ebayimg.com/images/g/ZmMAAOSwRiNk5YET/s-l1200.jpg", category: "godzilla", year: 2014 },
+        { title: "Godzilla: King of the Monsters", video: "https://znomc6azq2dc.coastlineventure.space/3FjgDmcnea8S35m/hls3/01/02736/s0i27kobpj4u_n/master.txt", image: "https://musicart.xboxlive.com/7/8f586a00-0000-0000-0000-000000000002/504/image.jpg", category: "godzilla", year: 2019 },
+        { title: "Godzilla vs. Kong", video: "https://vcvkqwy2zrck.viatrixfashionhouse.sbs/vy7cie2tqwc2cgp/hls3/01/00552/92whn99xqb8n_h/master.txt", image: "https://preview.redd.it/ive-just-noticed-these-posters-recently-they-all-seem-to-v0-7n3vir46w8wc1.jpg?width=640&crop=smart&auto=webp&s=f08b754a2bb4ef3d7fb14e5129f0ccf8188af421", category: "godzilla", year: 2021 },
+        { title: "Godzilla x Kong: The New Empire", video: "https://m5qilv3g2l.solventrainnovations.shop/mndx1pc8g/hls3/01/03929/jyjpiohrytff_,n,h,x,.urlset/master.txt", image: "https://myhotposters.com/cdn/shop/files/mL7118_1024x1024.jpg?v=1748531263", category: "godzilla", year: 2024 },
+        { title: "Godzilla", video: "https://wnsa7jyhmnmt12.aurorionconsultancy.online/o0iqqhz9to4p/hls3/01/00364/cx83n5lhdk0g_h/master.txt", image: "https://picfiles.alphacoders.com/433/thumb-433474.jpg", category: "godzilla", year: 1998 },
+         { title: "King Kong", video: "https://7f12638xuzfg.auroriondigitalworks.space/fbIjIZy3pIBwE0S/hls3/01/00487/ae1r0i1bnlc5_h/master.txt", image: "https://image.tmdb.org/t/p/original/3PLDhyNX9QIq176XI84Q6PeFD5h.jpg", category: "godzilla", year: 2005 },
+        { title: "King Arthur: Legend of the Sword", video: "https://m68btj72qc.cdn-centaurus.com/hls2/01/01203/f81b1hvnezfl_o/master.m3u8?t=eSZoZz0V5sNgBDd7YXBom26ewzp5RBZj7eAW4gRxXmM&s=1747719636&e=129600&f=6016652&srv=6Y0nzgZi8BCfuhZ&i=0.4&sp=500&p1=6Y0nzgZi8BCfuhZ&p2=6Y0nzgZi8BCfuhZ&asn=24554", image: "https://mir-s3-cdn-cf.behance.net/project_modules/disp/034c0682752173.5d2859e5abd97.jpg", category: "other", year: 2017 },
+            { title: "The Matrix", video: "https://bxs5xkxkyi4y.stellarquestholdings.shop/R7khaR4Jtgqr/hls3/01/00351/yyx4to862vvv_h/master.txt", image: "https://posterspy.com/wp-content/uploads/2022/03/The-Matrix-Richard-Philpott-Art.jpg", category: "matrix", year: 1999 },
+            { title: "The Matrix Reloaded", video: "https://sxic.fiorellagardenshop.shop/v4/vz/gkdpe/cf-master.txt?v=1730919117", image: "https://media-cache.cinematerial.com/p/500x/tmeigl34/the-matrix-reloaded-movie-poster.jpg?v=1456291958", category: "matrix", year: 2003 },
+            { title: "The Matrix Revolutions", video: "https://sdqm.mindspireproduction.cyou/v4/pq/m9r5u/cf-master.txt?v=1730976710", image: "https://image.tmdb.org/t/p/original/tyXwreXv4pfo4T4aplTKIp7f9GI.jpg", category: "matrix", year: 2003 },
+            { title: "The Matrix Resurrections", video: "https://sskt.halcyonfinancialgroup.online/v4/m9/jano9/index-f1-v1-a1.txt", image: "https://resizing.flixster.com/azk7WCNkOsS1Yb2QOZ6nYBMaVZs=/ems.cHJkLWVtcy1hc3NldHMvbW92aWVzL2Q4ZWE4ZTUwLTI5MTMtNDQ5Yi05M2Y5LTVlNWVlNjU5YWRmZC5qcGc=", category: "matrix", year: 2021 },
+             { title: "Dunkirk", video: "https://sipt.yevettesh.sbs/v4/9a/dbsbh/index-f1-v1-a1.txt", image: "https://i.ebayimg.com/images/g/E58AAOSwTglYm52D/s-l1200.jpg", category: "other", year: 2017 },
             { title: "Blade Runner 2049", video: "https://kFo8mkCe0fzdHLq.cdn-centaurus.com/hls2/01/01191/mvj7jdzhcbx8_o/master.m3u8?t=M2HAH_C4WhBzWA0Nhl39mNk11mosGyPaorolurwa4w4&s=1747719219&e=129600&f=5957941&srv=js4BwLKgfmTMJmVh&i=0.4&sp=500&p1=js4BwLKgfmTMJmVh&p2=js4BwLKgfmTMJmVh&asn=24554", image: "https://www.filmpostergallery.co.nz/wp-content/uploads/2022/10/Blade-Runner-2049-One-Sheet-Movie-Poster-12.jpg", category: "other", year: 2017 },
-            { title: "The Conjuring", video: "https://mistyrain47.live/file1/oBWTULRSaPnoRvu1Qn~t1ii1P12y2R1hwGPBEaUbkLb+HeE8SAhIKgTHGSmA2C0TtWsb4wOGV20duRMZbYF075pqip6t7G3oxyPYU1XRpFYikVm0x2NJGVn3thuF+G5qxM1h2hnI++QYGqBpcELBNIpdXb2dlJ3xT943ZPZbB6U=/MTA4MA==/aW5kZXgubTN1OA==.m3u8", image: "https://i.ebayimg.com/images/g/8-sAAOSwT5tgwi3m/s-l400.jpg", category: "conjuring", year: 2013 },
-            { title: "The Conjuring 2", video: "https://cloudflash91.xyz/file1/puzRZpciuf6Z5ruCfS~U0itK+QLrDuHpaPK4UmlnkckdFTxcqGX3GylLssrh9loUNOgdkmE2GsSKjegTijXci~VDZqEaGvs6nLg5rOQUTB1rBrjSjetlqkYJjq+OY~+hWTunUBo59LwewRHr5p+v3qusJIaI3S2WR1tvuKFn8Ik=/NzIw/aW5kZXgubTN1OA==.m3u8", image: "https://m.media-amazon.com/images/I/81ZpWSeRbVL._AC_UF1000,1000_QL80_DpWeblab_.jpg", category: "conjuring", year: 2016 },
-            { title: "The Conjuring: The Devil Made Me Do It", video: "https://s3ae.gatesnationjyd.sbs/v4/rw/pjwuk/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjVjMzgyMzUtZDMxOS00MmNkLWE3YjktMmU3NThmOGRkMDcyXkEyXkFqcGc@._V1_.jpg", category: "conjuring", year: 2021 },
-            { title: "The Conjuring: Last Rites", video: "https://vip.opstream90.com/20251006/14198_def14e85/index.m3u8", image: "https://i.pinimg.com/564x/4a/bf/f3/4abff36d0b2f972a84ceef8eebbc2893.jpg", category: "conjuring", year: 2025 },
-            { title: "Annabelle: Creation", video: "https://sskt.biggsupndfun.sbs:443/v4/61/qm99a/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/I/91fWyeqhysL._AC_UF894,1000_QL80_.jpg", category: "conjuring", year: 2017 },
+            { title: "The Conjuring", video: "https://j7fqjm25xt.helixmotioncraft.store/m2q5ea5w42hk/hls3/01/00375/0enes4t7ba6x_h/master.txt", image: "https://i.ebayimg.com/images/g/8-sAAOSwT5tgwi3m/s-l400.jpg", category: "conjuring", year: 2013 },
+            { title: "The Conjuring 2", video: "https://jdevchpxbgc6.lakesideproductioncollect.sbs/tyhlyqrrroqc/hls3/01/00719/7jpsqc4x4pyq_o/master.txt", image: "https://m.media-amazon.com/images/I/81ZpWSeRbVL._AC_UF1000,1000_QL80_DpWeblab_.jpg", category: "conjuring", year: 2016 },
+            { title: "The Conjuring: The Devil Made Me Do It", video: "https://drrh37sqosrl.viatoraacademy.shop/ma1vmsqmq/hls3/01/00544/ng5dwur4bnxs_h/master.txt", image: "https://m.media-amazon.com/images/M/MV5BMjVjMzgyMzUtZDMxOS00MmNkLWE3YjktMmU3NThmOGRkMDcyXkEyXkFqcGc@._V1_.jpg", category: "conjuring", year: 2021 },
+            { title: "The Conjuring: Last Rites", video: "https://hk1.shegu.net/vip/p1/movie_mp4_h264/2025/6/2/63632/movie.63632.2025.1080p.H264.20251008122235.mp4?KEY1=Z6BywuTUoW_SNgPn0gd8Zg&KEY2=1761883492&KEY3=1099527&KEY4=world&KEY7=febbox_video_quality_list_v3&KEY8=1099527", image: "https://i.pinimg.com/564x/4a/bf/f3/4abff36d0b2f972a84ceef8eebbc2893.jpg", category: "conjuring", year: 2025 },
+            { title: "Annabelle", video: "https://54pkdcyxbsxbermn.meadowbrooklearninglab.space/vy7cie2tqwc2cgp/hls3/01/00384/pmqlhsh2r4dc_h/master.txt", image: "https://upload.wikimedia.org/wikipedia/en/9/90/Annabelle_film_poster.jpg", category: "conjuring", year: 2017 },
+            { title: "Annabelle: Creation", video: "https://18jij6rntf.meadowhillcreativeworks.space/m2q5ea5w42hk/hls3/01/01186/reagtfu9dlcl_h/master.txt", image: "https://m.media-amazon.com/images/I/91fWyeqhysL._AC_UF894,1000_QL80_.jpg", category: "conjuring", year: 2017 },
+            { title: "Annabelle Comes Home", video: "https://54pkdcyxbsxbermn.orionengineeringlab.sbs/jxnu44rmvdct/hls3/01/00830/2dfj7kpdl8pb_o/index-v1-a1.txt", image: "https://images.moviesanywhere.com/412278051451bd29427d51bcb3fc468e/4311f1f7-9863-4be4-a45b-921adcf4dbac.jpg?h=375&resize=fit&w=250", category: "conjuring", year: 2017 },
             { title: "A Minecraft Movie", video: "https://cdn4505.ghone360fia.com:443/stream2/i-cdn-0/bc958bc4a3b99192d470c1a4d5ad5999/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT25EVoh2TENWMa1WU0olaVNjTy0ENadkTtplaGtmTUF1dOdVS1oFVWp2TEVUP:1750307560:193.93.153.143:241b300f8d4223c205d99c6bf16a751a8f1eaafe8c5c3937a61a7acc472f5620/./1080/index.m3u8", image: "https://lh5.googleusercontent.com/proxy/0nlhqTKgDGo1cPzHFBZR8INQrF5Cpk0GnKUqxkjCKZwzI7JFgt5PnBW_6P8sKXh1LdfFJUs7gzODOQh7fD5KC0q6IRHLAzt0_7rY95d7gWdob5tCQzE", category: "other", year: 2025 },
             { title: "Sully", video: "https://skra.alenapark.sbs:443/v4/ty/naotv/index-f2-v1-a1.txt", image: "https://f.woowoowoowoo.net/resize/250x400/e4/46/e4461928c94ab4041938ee5b809c2a57/e4461928c94ab4041938ee5b809c2a57.jpg", category: "other", year: 2016 },
             { title: "Max", video: "https://sipt.gomesscheerer.sbs:443/v4/9a/pccvx/index-f2-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMjA2Nzk0NzIyN15BMl5BanBnXkFtZTgwMjEyNTE5NDE@._V1_.jpg", category: "other", year: 2015 },
@@ -273,14 +287,14 @@
             { title: "The Island", video: "https://s3ae.ybarrazotz.sbs:443/v4/36/63krn/index-f2-v1-a1.txt", image: "https://media-cache.cinematerial.com/p/500x/yll7yozq/the-island-dvd-movie-cover.jpg?v=1456654083", category: "other", year: 2005 },
             { title: "The Accountant", video: "https://macdn.hakunaymatata.com/resource/b69cf1cad177dbcdef35bd62a3573cd2.mp4?Expires=1750742341&Signature=Bi1tsrKEPt-W0jc-cotbclYXGNr68cCkcmU-lTZ~BhBDExJhE8XUZZZpsK4Yi0iyyzlYYYLZMv4DJuZlIAfYuklZNevQnwyXvWyUEbKvfmOKRzgKRhBMEbFzXNSKYKHOfL5VacgN0rmdgjq8vjpdK9-LVsZQIC4dQ2e-fQu0QoIB9xM4hlrIMZw7yMAA43TC29-SMftczm9Q31WQTMuYSpyeJnfqTE7x4~eazokzUMq31H~7KrmRk~CVJ~JjCxYdHT-dpLl9rvnLExLkRYg2f5TS4k3Zrr~OtTwx5vVmet5aLLt3FqH9V7M0ppsUlUVI8T1EzdwaUHimHbC-BdzAmg__&Key-Pair-Id=KMHN1LQ1HEUPL", image: "https://preview.redd.it/the-accountant-2016-not-the-biggest-ben-affleck-fan-he-did-v0-fg18l5g8zm9d1.jpeg?width=640&crop=smart&auto=webp&s=1a6259217a5d2b887148af8c117f6d8f30b3f5b8", category: "other", year: 2016 },
             { title: "The Accountant 2", video: "https://s3ae.ybarrazotz.sbs:443/v4/36/63krn/index-f2-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/lUvfTcOZiK0sdcX0WNLPbMyKjGm.jpg", category: "other", year: 2025 },
-            { title: "Harry Potter and the Sorcerer's Stone", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2pFRo1WTXl1MZJTSz8ERjh3TUdGNO1mRrpFVrNzTHpUbPR1axo1RRhXWqdWP:1749550036:89.116.30.152:cdaf61882b5e35b60b977e94b2438e11f46470cd17303c3cad946c489c513f6d/./1080/index.m3u8", image: "https://lh3.googleusercontent.com/proxy/X3sxCoT51oiIRzm7td54GWocz7Hg49FLKxGG_1AUwy_3FoQ_RyCX4dR8B2mlAexahQAZK06MZsvC4W_fzej3LWFxcHeCQ7vvYdUwnIjHs7AYlcp4Sjefx9s8Zbh6MLTGh30BJrL57OmV9Q", category: "potter", year: 2001 },
-            { title: "Harry Potter and the Chamber of Secrets", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2pVbSlmTHlVNPdlTq5kMRFTTEllMadlTslleJl3TUlUMN1WSzolaFBjTt1UP:1749550917:89.116.30.152:dfbacec40cca8eeafc3a1d208c866b56da8dacd359015f4145c9cbe8cc422e1a/./1080/index.m3u8", image: "https://m.media-amazon.com/images/I/71w0Cv61xFL.jpg", category: "potter", year: 2002 },
-            { title: "Harry Potter and the Prisoner of Azkaban", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2llMahWWXlFMZp3a4lleCxmWUF0dNRVT6llerdXTHZUaZdVTwklealWWXlUP:1749550950:89.116.30.152:6b72191e7db174b3cd8c17c904a1eb866278283061c79b4b8219e7f4b78d584b/./1080/index.m3u8", image: "https://cdn11.bigcommerce.com/s-ydriczk/images/stencil/1500x1500/products/84616/93553/harry-potter-and-the-prisoner-of-azkaban-final-style-original-movie-poster-buy-now-at-starstills__52478.1572252387.jpg?c=2", category: "potter", year: 2004 },
-            { title: "Harry Potter and the Goblet of Fire", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT29EVZNjWqV0daRFZo5kMZRTTEFUeNdkWp1ERFRTW6VleaR0Zy8EVnhnTqNWP:1749550990:89.116.30.152:271de42d79a999db8a44cb028265845575f62803eb4290dcd5ce277b6711ca18/./1080/index.m3u8", image: "https://image.tmdb.org/t/p/original/fECBtHlr0RB3foNHDiCBXeg9Bv9.jpg", category: "potter", year: 2005 },
-            { title: "Harry Potter and the Order of the Phoenix", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT250VKl2THp1aZRVW14ERjh3TEpVbOdlUsp1RVpnWEF0MadUUy40RGtWTENWP:1749551054:89.116.30.152:8a4608411c561bda7d60c03f9a3c9b506ef0770c50dfc291a3dcaae6d8ec3764/./1080/index.m3u8", image: "https://image.tmdb.org/t/p/original/g6n8G0xPnBVUIKKK41sNmbZB5h4.jpg", category: "potter", year: 2007 },
-            { title: "Harry Potter and the Half-Blood Prince", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2pFRjdnTUVleNpmVq1kMa1mTEt2dapWVz80RFRTWqVkeO1WW0oVbVFjWUlUP:1749551092:89.116.30.152:0e4b30218d77de2919e9655bed95913b65699f2c379f917560198cdbfa9ad03b/./1080/index.m3u8", image: "https://m.media-amazon.com/images/I/71eji66O2GL._AC_UF894,1000_QL80_DpWeblab_.jpg", category: "potter", year: 2009 },
-            { title: "Harry Potter and the Deathly Hallows: Part 1", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2p1VapWTykFMNJTW45keJJTT6lUMOdkVr5kMFRjWUpUbOpXU35keNBTWtFVP:1749551134:89.116.30.152:fbb7087edde6ff587bf888d162e99128893a9d6a90f96d3afe56b4b815b04a7f/./1080/index.m3u8", image: "https://m.media-amazon.com/images/M/MV5BMTQ2OTE1Mjk0N15BMl5BanBnXkFtZTcwODE3MDAwNA@@._V1_.jpg", category: "potter", year: 2010 },
-            { title: "Harry Potter and the Deathly Hallows: Part 2", video: "https://cdn4521.loane359jil.com:443/stream2/i-arch-400/a5b5ae66248be0039515bda55fa1d488/MJTMsp1RshGTygnMNRUR2N2MSlnWXZEdMNDZzQWe5MDZzMmdZJTO1R2RWVHZDljekhkSsl1VwYnWtx2cihVT2p1RJRjTE1UeZJjTr5ERnFTTqZUbNpnQqpFVnhXTEFUMNpXU450VSpWTX1UP:1749551165:89.116.30.152:53ed3ded2148389819d059af807b3de54c247ca233e6f45f7e64b08a66c2fa59/./1080/index.m3u8", image: "https://m.media-amazon.com/images/I/81URuJcbc1L._AC_UF894,1000_QL80_.jpg", category: "potter", year: 2011 },
+            { title: "Harry Potter and the Sorcerer's Stone", video: "https://s1q.drivonaesthetic.cyou:443/v4/pk8/dvdeh/index-f2-v1-a1.txt", image: "https://lh3.googleusercontent.com/proxy/X3sxCoT51oiIRzm7td54GWocz7Hg49FLKxGG_1AUwy_3FoQ_RyCX4dR8B2mlAexahQAZK06MZsvC4W_fzej3LWFxcHeCQ7vvYdUwnIjHs7AYlcp4Sjefx9s8Zbh6MLTGh30BJrL57OmV9Q", category: "potter", year: 2001 },
+            { title: "Harry Potter and the Chamber of Secrets", video: "https://sf3.bluefusion.sbs:443/v4/il/kjh68/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/71w0Cv61xFL.jpg", category: "potter", year: 2002 },
+            { title: "Harry Potter and the Prisoner of Azkaban", video: "https://sbs.dreamoraresort.sbs:443/v4/kdv/8doer/index-f2-v1-a1.txt", image: "https://cdn11.bigcommerce.com/s-ydriczk/images/stencil/1500x1500/products/84616/93553/harry-potter-and-the-prisoner-of-azkaban-final-style-original-movie-poster-buy-now-at-starstills__52478.1572252387.jpg?c=2", category: "potter", year: 2004 },
+            { title: "Harry Potter and the Goblet of Fire", video: "https://sf3.auroriacollective.cyou:443/v4/6s/y3sfm/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/fECBtHlr0RB3foNHDiCBXeg9Bv9.jpg", category: "potter", year: 2005 },
+            { title: "Harry Potter and the Order of the Phoenix", video: "https://s1q.claravonartisan.sbs:443/v4/ek/y3oe5/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/original/g6n8G0xPnBVUIKKK41sNmbZB5h4.jpg", category: "potter", year: 2007 },
+            { title: "Harry Potter and the Half-Blood Prince", video: "https://sy6.brionix.cyou:443/v4/ek/qcwbo/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/71eji66O2GL._AC_UF894,1000_QL80_DpWeblab_.jpg", category: "potter", year: 2009 },
+            { title: "Harry Potter and the Deathly Hallows: Part 1", video: "https://sri.claravonartisan.sbs:443/v4/k5/are95/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/M/MV5BMTQ2OTE1Mjk0N15BMl5BanBnXkFtZTcwODE3MDAwNA@@._V1_.jpg", category: "potter", year: 2010 },
+            { title: "Harry Potter and the Deathly Hallows: Part 2", video: "https://sui.moriartis.store:443/v4/is9/dvl55/index-f1-v1-a1.txt", image: "https://m.media-amazon.com/images/I/81URuJcbc1L._AC_UF894,1000_QL80_.jpg", category: "potter", year: 2011 },
             { title: "Sinners", video: "https://i60k6cbfsa8z.venturehausgroup.online/n2cyk1vw5ccl/hls3/01/09569/cmgef8hk6fda_n/master.txt", image: "https://mlpnk72yciwc.i.optimole.com/cqhiHLc.IIZS~2ef73/w:auto/h:auto/q:75/https://bleedingcool.com/wp-content/uploads/2025/03/sinners_ver15_xxlg.jpg", category: "other", year: 2025 },
             { title: "Mowgli: Legend of the Jungle", video: "https://wfoqwegqwcofgtb.valentrixmotion.cyou/ma1vmsqmq/hls3/01/01131/njbptlz76h1l_o/master.txt", image: "https://www.tvtime.com/_next/image?url=https%3A%2F%2Fartworks.thetvdb.com%2Fbanners%2Fv4%2Fmovie%2F168%2Fposters%2F66023b511450a.jpg&w=640&q=75", category: "other", year: 2018 },
             { title: "One Battle After Another", video: "https://spc.oakridgeartisanatelier.cyou:443/v4/6hf/5akocg/index-f1-v1-a1.txt", image: "https://image.tmdb.org/t/p/w780/m1jFoahEbeQXtx4zArT2FKdbNIj.jpg", category: "other", year: 2025 },
@@ -290,193 +304,69 @@
 
   ];
 
-  // DOM references & state
+  // -------------------
+  // Elements
+  // -------------------
   const container = document.getElementById('movies');
   const loadingElement = document.getElementById('loading');
   const movieCountElement = document.getElementById('movie-count');
-  const categoryButtons = document.querySelectorAll('.category-btn');
   const searchBar = document.getElementById('searchBar');
+  const categoryButtons = document.querySelectorAll('.category-btn');
   const themeToggle = document.getElementById('theme-toggle');
   const sortToggle = document.getElementById('sort-toggle');
 
-  let currentCategory = 'all';
-  let sortBy = 'title';
+  // Modal & player elements
+  const playerModal = document.getElementById('playerModal');
+  const modalVideo = document.getElementById('modalVideo');
+  const playerWrapper = document.getElementById('playerWrapper');
+  const closeModalBtn = document.getElementById('closeModal');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const playPauseBtn = document.getElementById('playPauseBtn');
+  const modalTitle = document.getElementById('modalTitle');
+  const playerError = document.getElementById('playerError');
+  const qualityControls = document.getElementById('qualityControls');
+
+  // State
   let isDarkMode = true;
-  let currentVideo = null; // {title, videoUrl, index}
-  let currentHls = null;   // hls.js instance when using HLS
+  let sortBy = 'title';
+  let currentCategory = 'all';
+  let currentHls = null;
+  let currentVideo = null; // { title, videoUrl, index (index in filtered array) }
 
-  // Utility - show error
-  function showError(message) {
-    const e = document.getElementById('playerError');
-    e.textContent = message;
-    e.classList.remove('hidden');
-    setTimeout(()=> e.classList.add('hidden'), 4500);
-  }
-
-  // Determine if a URL *looks like* HLS manifest
+  // ---------- Utility detection functions (Hawkeye/Tukaram style) ----------
   function isHls(url) {
     if (!url) return false;
-    const u = url.toLowerCase();
-    return u.includes('.m3u8') || u.includes('index.m3u8') || u.includes('master.m3u8') || u.endsWith('.m3u8') || u.includes('/hls') || u.includes('playlist.m3u8');
+    return url.includes('.m3u8') ||
+           url.includes('index-') ||
+           /index.*\.txt/i.test(url) ||
+           url.includes('manifest') ||
+           url.includes('master.m3u8');
+  }
+  function isMP4(url) {
+    return /\.mp4($|\?)/i.test(url || '');
+  }
+  function isYouTube(url) {
+    if (!url) return false;
+    return url.includes('youtube.com') || url.includes('youtu.be') || url.includes('youtube-nocookie.com') || url.includes('/embed/');
   }
 
-  // Play video in modal: supports mp4 and m3u8 (via hls.js)
-  function playInModal(title, url, index) {
-    const modal = document.getElementById('playerModal');
-    const video = document.getElementById('modalVideo');
-    const titleElement = document.getElementById('modalTitle');
-
-    // Clean prior hls instance & src
-    if (currentHls) {
-      try { currentHls.destroy(); } catch(e){/*ignore*/ }
-      currentHls = null;
-    }
-    video.pause();
-    video.removeAttribute('src');
-    video.load();
-
-    titleElement.textContent = title;
-
-    if (url.includes('.mp4')) {
-      // direct mp4
-      video.src = url;
-      video.load();
-      modal.classList.remove('hidden');
-      document.body.style.overflow = 'hidden';
-      video.play().catch(e => console.warn('Autoplay blocked', e));
-
-    } else if (isHls(url)) {
-      // HLS — prefer playing inside modal using hls.js when supported
-      if (Hls && Hls.isSupported()) {
-        currentHls = new Hls();
-        currentHls.loadSource(url);
-        currentHls.attachMedia(video);
-        currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
-          modal.classList.remove('hidden');
-          document.body.style.overflow = 'hidden';
-          video.play().catch(e => console.warn('Autoplay blocked', e));
-        });
-        currentHls.on(Hls.Events.ERROR, function(event, data) {
-          console.warn('HLS error', data);
-          // fallback: redirect to player.html if fatal
-          if (data && data.fatal) {
-            currentHls.destroy();
-            currentHls = null;
-            showError('HLS playback failed — opening external player.');
-            setTimeout(()=> redirectToExternalPlayer(title, url, index), 800);
-          }
-        });
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        // Safari native HLS
-        video.src = url;
-        modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        video.play().catch(e => console.warn('Autoplay blocked', e));
-      } else {
-        // No HLS support — redirect to external player
-        showError('HLS not supported by this browser — opening external player.');
-        setTimeout(()=> redirectToExternalPlayer(title, url, index), 800);
-      }
-    } else {
-      // Unknown streaming format — redirect to external player (player.html)
-      redirectToExternalPlayer(title, url, index);
-      return;
-    }
-
-    // Save current video info
-    currentVideo = { title, videoUrl: url, index };
-  }
-
-  function redirectToExternalPlayer(title, url, index) {
-    const link = `player.html?title=${encodeURIComponent(title)}&video=${encodeURIComponent(url)}&index=${index}`;
-    window.location.href = link;
-  }
-
-  // Top-level playVideo function (this is what buttons call)
-  function playVideo(title, videoUrl, index) {
-    try {
-      // If mp4 -> play in modal
-      if (videoUrl && videoUrl.includes('.mp4')) {
-        playInModal(title, videoUrl, index);
-        return;
-      }
-
-      // If HLS-like URL -> attempt to play in modal via hls.js
-      if (isHls(videoUrl)) {
-        playInModal(title, videoUrl, index);
-        return;
-      }
-
-      // Otherwise, redirect to external player.html
-      redirectToExternalPlayer(title, videoUrl, index);
-    } catch (err) {
-      console.error('playVideo error', err);
-      showError('Playback error — opening external player.');
-      setTimeout(()=> redirectToExternalPlayer(title, videoUrl, index), 600);
-    }
-  }
-
-  // Close modal & cleanup
-  function closeModal() {
-    const modal = document.getElementById('playerModal');
-    const video = document.getElementById('modalVideo');
-
-    if (currentHls) {
-      try { currentHls.destroy(); } catch(e) { /*ignore*/ }
-      currentHls = null;
-    }
-    video.pause();
-    video.removeAttribute('src');
-    try { video.load(); } catch(e){/*ignore*/}
-    modal.classList.add('hidden');
-    document.body.style.overflow = 'auto';
-  }
-
-  // Player controls helpers
-  function togglePlayPause() {
-    const video = document.getElementById('modalVideo');
-    if (!video) return;
-    video.paused ? video.play() : video.pause();
-  }
-  function seekVideo(seconds) {
-    const video = document.getElementById('modalVideo');
-    if (!video) return;
-    video.currentTime = Math.max(0, video.currentTime + seconds);
-  }
-  function toggleFullscreen() {
-    const video = document.getElementById('modalVideo');
-    if (!video) return;
-    if (!document.fullscreenElement) {
-      video.requestFullscreen().catch(err => showError('Fullscreen failed: ' + err.message));
-    } else {
-      document.exitFullscreen();
-    }
-  }
-  function toggleMute() {
-    const video = document.getElementById('modalVideo');
-    if (!video) return;
-    video.muted = !video.muted;
-  }
-
+  // ---------- Render grid ----------
   function getFilteredMovies() {
     let filtered = [...movies];
-    // category
-    if (currentCategory !== 'all') filtered = filtered.filter(m => m.category === currentCategory);
-    // search
-    const searchTerm = (searchBar.value || '').toLowerCase();
-    if (searchTerm) filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(searchTerm));
-    // sort
-    filtered.sort((a,b) => {
-      if (sortBy === 'title') return (a.title || '').localeCompare(b.title || '');
-      return (b.year||0) - (a.year||0);
-    });
+    if (currentCategory && currentCategory !== 'all') filtered = filtered.filter(m => m.category === currentCategory);
+    const term = (searchBar.value || '').toLowerCase();
+    if (term) filtered = filtered.filter(m => (m.title || '').toLowerCase().includes(term));
+    if (sortBy === 'title') filtered.sort((a,b) => (a.title||'').localeCompare(b.title||''));
+    else filtered.sort((a,b) => (b.year||0) - (a.year||0));
     return filtered;
   }
 
   function renderMovies() {
     loadingElement.style.display = 'block';
     container.innerHTML = '';
-    setTimeout(()=>{
+    setTimeout(() => {
       const filtered = getFilteredMovies();
       if (filtered.length === 0) {
         container.innerHTML = `<div class="col-span-full text-center py-10">
@@ -486,7 +376,7 @@
         </div>`;
       } else {
         filtered.forEach((movie, idx) => {
-          const index = idx; // index within filtered
+          const index = idx; // index inside filtered array
           const el = document.createElement('div');
           el.className = 'fade-in';
           el.innerHTML = `
@@ -505,9 +395,9 @@
             </div>
           `;
           el.querySelector('.play-btn').addEventListener('click', ()=> {
-            // compute real index in the full filtered array for next/prev navigation
+            // find true index in filtered list for correct next/prev behavior in this filtered set
             const filteredList = getFilteredMovies();
-            const trueIndex = filteredList.indexOf(movie); // index inside filtered array
+            const trueIndex = filteredList.indexOf(movie);
             playVideo(movie.title, movie.video, trueIndex);
           });
           container.appendChild(el);
@@ -515,68 +405,179 @@
       }
       movieCountElement.textContent = filtered.length;
       loadingElement.style.display = 'none';
-    }, 250);
+    }, 200);
   }
 
-  // Event listeners setup
-  function setupEventListeners() {
-    categoryButtons.forEach(b => {
-      b.addEventListener('click', ()=> {
-        categoryButtons.forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        currentCategory = b.dataset.category || 'all';
-        renderMovies();
-      });
+  // ---------- Modal player helpers (Hawkeye/Tukaram implementation) ----------
+  function showError(msg) {
+    playerError.textContent = msg;
+    playerError.classList.remove('hidden');
+    setTimeout(()=> playerError.classList.add('hidden'), 4000);
+  }
+
+  function resetPlayer() {
+    // destroy HLS if present
+    if (currentHls) {
+      try { currentHls.destroy(); } catch (e) {}
+      currentHls = null;
+    }
+    // Remove any iframe fallback inside wrapper and restore video element
+    playerWrapper.innerHTML = `<video id="modalVideo" controls class="w-full aspect-video bg-black" playsinline></video>`;
+    // rebind modalVideo reference and listeners
+    bindModalVideo();
+  }
+
+  function bindModalVideo() {
+    // reselect modalVideo element reference after reset
+    const newVideo = document.getElementById('modalVideo');
+    if (!newVideo) return;
+    // replace global reference
+    window.modalVideo = newVideo;
+    // attach timeupdate/ended listeners
+    newVideo.addEventListener('timeupdate', () => {
+      // we can implement a visible progress bar if needed
     });
-
-    searchBar.addEventListener('input', renderMovies);
-
-    themeToggle.addEventListener('click', () => {
-      isDarkMode = !isDarkMode;
-      if (isDarkMode) {
-        document.body.classList.remove('bg-gray-100','text-gray-900');
-        document.body.classList.add('bg-black','text-gray-100');
-        themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-      } else {
-        document.body.classList.remove('bg-black','text-gray-100');
-        document.body.classList.add('bg-gray-100','text-gray-900');
-        themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-      }
+    newVideo.addEventListener('ended', () => {
+      playPauseBtn.innerHTML = '<i class="fas fa-redo mr-1"></i> Replay';
     });
+  }
 
-    sortToggle.addEventListener('click', ()=> {
-      sortBy = sortBy === 'title' ? 'year' : 'title';
-      sortToggle.innerHTML = sortBy === 'title' ? '<i class=\"fas fa-sort-alpha-down\"></i>' : '<i class=\"fas fa-sort-numeric-down\"></i>';
-      renderMovies();
-    });
+  // attempt to open a url inside modal with HLS/mp4/iframe logic
+  function playInModal(title, url, indexInFiltered) {
+    // Update metadata
+    modalTitle.textContent = title || 'Video';
+    playerError.classList.add('hidden');
+    // Reset player element
+    resetPlayer();
+    // warm UI
+    playerModal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
 
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
-    document.getElementById('nextBtn').addEventListener('click', playNextVideo);
-    document.getElementById('prevBtn').addEventListener('click', playPreviousVideo);
+    // If no URL — redirect fallback
+    if (!url) {
+      showError('No playable URL provided — opening external player.');
+      setTimeout(()=> redirectToExternalPlayer(title, url, indexInFiltered), 600);
+      return;
+    }
 
-    // keyboard
-    document.addEventListener('keydown', (e) => {
-      const modal = document.getElementById('playerModal');
-      if (!modal.classList.contains('hidden')) {
-        switch(e.key) {
-          case 'Escape': closeModal(); break;
-          case ' ': e.preventDefault(); togglePlayPause(); break;
-          case 'ArrowRight': seekVideo(10); break;
-          case 'ArrowLeft': seekVideo(-10); break;
-          case 'f': toggleFullscreen(); break;
-          case 'm': toggleMute(); break;
-          case 'n': playNextVideo(); break;
-          case 'p': playPreviousVideo(); break;
+    // Streamtape / iframe-host players (common hosts)
+    const hostLower = url.toLowerCase();
+    if (hostLower.includes('streamtape.com') || hostLower.includes('dood') || hostLower.includes('vidcdn') || hostLower.includes('openload') || hostLower.includes('ok.ru') || hostLower.includes('mega.nz')) {
+      // embed iframe directly
+      playerWrapper.innerHTML = `<iframe src="${url}" width="100%" height="100%" allowfullscreen allow="autoplay; encrypted-media" frameborder="0"></iframe>`;
+      // update modalVideo reference to null (we replaced with iframe)
+      window.modalVideo = null;
+      currentHls = null;
+      currentVideo = { title, videoUrl: url, index: indexInFiltered };
+      playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+      return;
+    }
+
+    // YouTube links — convert to embed
+    if (isYouTube(url)) {
+      let embedUrl = url;
+      try {
+        if (url.includes('watch') && url.includes('v=')) {
+          const vid = new URLSearchParams(url.split('?')[1]).get('v');
+          if (vid) embedUrl = `https://www.youtube.com/embed/${vid}`;
+        } else if (url.includes('youtu.be/')) {
+          const parts = url.split('youtu.be/');
+          if (parts[1]) {
+            const vid = parts[1].split(/[?&]/)[0];
+            embedUrl = `https://www.youtube.com/embed/${vid}`;
+          }
         }
+      } catch (e) {}
+      playerWrapper.innerHTML = `<iframe src="${embedUrl}?autoplay=1&modestbranding=1&rel=0" width="100%" height="100%" allowfullscreen allow="autoplay; encrypted-media" frameborder="0"></iframe>`;
+      window.modalVideo = null;
+      currentHls = null;
+      currentVideo = { title, videoUrl: url, index: indexInFiltered };
+      playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+      return;
+    }
+
+    // HLS (.m3u8 and index*.txt variants)
+    if (isHls(url)) {
+      // ensure the HTML video element exists and use Hls.js if available
+      const vidEl = document.getElementById('modalVideo');
+      if (!vidEl) {
+        showError('Player element missing — opening external player.');
+        setTimeout(()=> redirectToExternalPlayer(title, url, indexInFiltered), 600);
+        return;
       }
-    });
+
+      if (Hls && Hls.isSupported()) {
+        currentHls = new Hls();
+        try {
+          currentHls.loadSource(url);
+          currentHls.attachMedia(vidEl);
+        } catch (e) {
+          console.warn('HLS attach error', e);
+        }
+        currentHls.on(Hls.Events.MANIFEST_PARSED, function() {
+          currentVideo = { title, videoUrl: url, index: indexInFiltered };
+          try { vidEl.play().catch(()=>{}); } catch(e){}
+          playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+        });
+        currentHls.on(Hls.Events.ERROR, function(event, data) {
+          console.warn('HLS error', data);
+          if (data && data.fatal) {
+            try { currentHls.destroy(); } catch(e){}
+            currentHls = null;
+            showError('HLS playback failed — opening external player.');
+            setTimeout(()=> redirectToExternalPlayer(title, url, indexInFiltered), 600);
+          }
+        });
+      } else if (vidEl.canPlayType && vidEl.canPlayType('application/vnd.apple.mpegurl')) {
+        // Safari native HLS
+        vidEl.src = url;
+        currentVideo = { title, videoUrl: url, index: indexInFiltered };
+        try { vidEl.play().catch(()=>{}); } catch(e){}
+        playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+      } else {
+        // no HLS support - redirect
+        showError('HLS not supported — opening external player.');
+        setTimeout(()=> redirectToExternalPlayer(title, url, indexInFiltered), 600);
+      }
+      return;
+    }
+
+    // MP4 direct
+    if (isMP4(url)) {
+      const vidEl = document.getElementById('modalVideo');
+      if (!vidEl) { redirectToExternalPlayer(title, url, indexInFiltered); return; }
+      vidEl.src = url;
+      currentVideo = { title, videoUrl: url, index: indexInFiltered };
+      try { vidEl.play().catch(()=>{}); } catch(e){}
+      playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+      return;
+    }
+
+    // Unknown format — fallback to external player
+    redirectToExternalPlayer(title, url, indexInFiltered);
   }
 
-  // Next/Prev navigation based on filtered list + currentVideo.index (index inside filtered list)
+  function redirectToExternalPlayer(title, url, index) {
+    const link = `player.html?title=${encodeURIComponent(title || '')}&video=${encodeURIComponent(url || '')}&index=${index}`;
+    window.location.href = link;
+  }
+
+  // ---------- Top-level exposed function used by tiles ----------
+  function playVideo(title, videoUrl, indexInFiltered) {
+    try {
+      playInModal(title, videoUrl, indexInFiltered);
+    } catch (err) {
+      console.error('playVideo error', err);
+      showError('Playback error — opening external player.');
+      setTimeout(()=> redirectToExternalPlayer(title, videoUrl, indexInFiltered), 600);
+    }
+  }
+  window.playVideo = playVideo; // preserve global
+
+  // ---------- Controls: next / prev / fullscreen / play-pause / seek / mute ----------
   function playNextVideo() {
     const filtered = getFilteredMovies();
-    if (!currentVideo) return;
+    if (!currentVideo) { showError('No current video'); return; }
     const idx = currentVideo.index;
     if (idx < filtered.length - 1) {
       const next = filtered[idx + 1];
@@ -587,7 +588,7 @@
   }
   function playPreviousVideo() {
     const filtered = getFilteredMovies();
-    if (!currentVideo) return;
+    if (!currentVideo) { showError('No current video'); return; }
     const idx = currentVideo.index;
     if (idx > 0) {
       const prev = filtered[idx - 1];
@@ -597,90 +598,129 @@
     }
   }
 
-  // init
-  function init() {
+  function togglePlayPause() {
+    const vid = document.getElementById('modalVideo');
+    if (!vid) return;
+    if (vid.paused) {
+      vid.play().catch(()=>{});
+      playPauseBtn.innerHTML = '<i class="fas fa-pause mr-1"></i> Pause';
+    } else {
+      vid.pause();
+      playPauseBtn.innerHTML = '<i class="fas fa-play mr-1"></i> Play';
+    }
+  }
+
+  function seekVideo(seconds) {
+    const vid = document.getElementById('modalVideo');
+    if (!vid) return;
+    vid.currentTime = Math.max(0, vid.currentTime + seconds);
+  }
+
+  function toggleFullscreen() {
+    const el = document.getElementById('modalVideo') || playerWrapper.querySelector('iframe');
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) el.requestFullscreen().catch(err => showError('Fullscreen failed: ' + err.message));
+      else if (playerModal.requestFullscreen) playerModal.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen();
+    }
+  }
+
+  function toggleMute() {
+    const vid = document.getElementById('modalVideo');
+    if (!vid) return;
+    vid.muted = !vid.muted;
+  }
+
+  // ---------- Close modal and cleanup ----------
+  function closeModal() {
+    // destroy hls and cleanup
+    if (currentHls) {
+      try { currentHls.destroy(); } catch(e) {}
+      currentHls = null;
+    }
+    const vid = document.getElementById('modalVideo');
+    if (vid) {
+      try { vid.pause(); } catch(e){}
+      try { vid.removeAttribute('src'); vid.load(); } catch(e){}
+    }
+    // restore video element inside wrapper
+    resetPlayer();
+    playerModal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+    currentVideo = null;
+    playPauseBtn.innerHTML = '<i class="fas fa-play mr-1"></i> Play';
+  }
+
+  // ---------- Bind UI events ----------
+  closeModalBtn.addEventListener('click', closeModal);
+  prevBtn.addEventListener('click', playPreviousVideo);
+  nextBtn.addEventListener('click', playNextVideo);
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+  playPauseBtn.addEventListener('click', togglePlayPause);
+
+  // clicking outside the modal content closes modal
+  playerModal.addEventListener('click', (e) => {
+    if (e.target === playerModal) closeModal();
+  });
+
+  // keyboard shortcuts (when modal open)
+  document.addEventListener('keydown', (e) => {
+    if (playerModal.classList.contains('hidden')) return;
+    switch (e.key) {
+      case 'Escape': closeModal(); break;
+      case ' ': e.preventDefault(); togglePlayPause(); break;
+      case 'ArrowRight': seekVideo(10); break;
+      case 'ArrowLeft': seekVideo(-10); break;
+      case 'f': toggleFullscreen(); break;
+      case 'm': toggleMute(); break;
+      case 'n': playNextVideo(); break;
+      case 'p': playPreviousVideo(); break;
+    }
+  });
+
+  // ---------- Helpers for UI interactions ----------
+  searchBar.addEventListener('input', () => renderMovies());
+  categoryButtons.forEach(b => {
+    b.addEventListener('click', () => {
+      categoryButtons.forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      currentCategory = b.dataset.category || 'all';
+      renderMovies();
+    });
+  });
+
+  themeToggle.addEventListener('click', () => {
+    isDarkMode = !isDarkMode;
+    if (isDarkMode) {
+      document.body.classList.remove('bg-gray-100','text-gray-900');
+      document.body.classList.add('bg-black','text-gray-100');
+      themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+    } else {
+      document.body.classList.remove('bg-black','text-gray-100');
+      document.body.classList.add('bg-gray-100','text-gray-900');
+      themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+  });
+
+  sortToggle.addEventListener('click', ()=> {
+    sortBy = sortBy === 'title' ? 'year' : 'title';
+    sortToggle.innerHTML = sortBy === 'title' ? '<i class=\"fas fa-sort-alpha-down\"></i>' : '<i class=\"fas fa-sort-numeric-down\"></i>';
     renderMovies();
-    setupEventListeners();
+  });
+
+  // ---------- Init ----------
+  function init() {
+    // ensure modalVideo reference is available and bound
+    bindModalVideo();
+    renderMovies();
   }
   window.addEventListener('DOMContentLoaded', init);
 
-  // expose playVideo to global (so inline onclick works if used)
-  window.playVideo = playVideo;
+  // expose close and play functions globally if needed
+  window.closePlayerModal = closeModal;
   </script>
   
 </body>
 </html>
-
-<!-- Canvas for click sparks -->
-<canvas id="sparkCanvasPage"></canvas>
-
-<style>
-#sparkCanvasPage {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: 10000;
-}
-</style>
-
-<script>
-// Click sparks for full page
-const canvas = document.getElementById('sparkCanvasPage');
-const ctx = canvas.getContext('2d');
-const sparks = [];
-const duration = 300;       // duration of each spark
-const sparkCount = 6;       // sparks per click
-const sparkSize = 8;        // line length
-const sparkRadius = 12;     // max distance
-const sparkColor = '#00f2ff'; // color of sparks
-const easing = t => t*(2-t);  // ease-out
-
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const now = performance.now();
-  for(let i = sparks.length - 1; i >= 0; i--) {
-    const s = sparks[i];
-    const elapsed = now - s.startTime;
-    if(elapsed >= duration) { sparks.splice(i,1); continue; }
-    const progress = elapsed / duration;
-    const eased = easing(progress);
-    const dist = eased * sparkRadius;
-    const line = sparkSize * (1 - eased);
-    const x1 = s.x + dist * Math.cos(s.angle);
-    const y1 = s.y + dist * Math.sin(s.angle);
-    const x2 = s.x + (dist + line) * Math.cos(s.angle);
-    const y2 = s.y + (dist + line) * Math.sin(s.angle);
-    ctx.strokeStyle = sparkColor;
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(x1,y1);
-    ctx.lineTo(x2,y2);
-    ctx.stroke();
-  }
-  requestAnimationFrame(draw);
-}
-requestAnimationFrame(draw);
-
-document.addEventListener('click', e => {
-  const x = e.clientX;
-  const y = e.clientY;
-  for(let i=0;i<sparkCount;i++){
-    sparks.push({
-      x, 
-      y, 
-      angle: (2*Math.PI*i)/sparkCount, 
-      startTime: performance.now()
-    });
-  }
-});
-</script>
